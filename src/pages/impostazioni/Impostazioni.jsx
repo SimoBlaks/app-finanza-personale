@@ -5,6 +5,7 @@ const schede = [
   { a: 'persone', etichetta: 'Persone' },
   { a: 'asset', etichetta: 'Asset' },
   { a: 'generali', etichetta: 'Saldo e soglie' },
+  { a: 'esporta', etichetta: 'Esporta' },
 ]
 
 export default function Impostazioni() {
