@@ -44,6 +44,8 @@ function ModuloAsset({ iniziale, onFine }) {
     setF((x) => ({ ...x, righe: x.righe.map((r, j) => (j === i ? { ...r, [campo]: valore } : r)) }))
 
   const esposizione = verificaEsposizione(f.righe)
+  // l'esposizione è facoltativa: conta solo se almeno una riga è compilata
+  const compilate = f.righe.some((r) => r.paese.trim() || r.percentuale.trim())
   const quotazione = f.tipologia === 'obbligazione' ? 'percentuale' : 'unitaria'
 
   async function salva(e) {
@@ -110,7 +112,11 @@ function ModuloAsset({ iniziale, onFine }) {
         {quotazione === 'percentuale' && ' (la quantità sarà il valore nominale in euro)'}
       </p>
 
-      <h3>Esposizione geografica</h3>
+      <h3>Esposizione geografica <span className="nota">(facoltativa)</span></h3>
+      <p className="nota">
+        Se non la conosci lascia le righe vuote: l'asset viene salvato lo stesso e nel grafico
+        dell'esposizione comparirà come "Non specificato". Se la compili, la somma deve fare 100%.
+      </p>
       {f.righe.map((r, i) => (
         <div className="riga-esposizione" key={i}>
           <input placeholder="Paese" value={r.paese} onChange={(e) => impostaRiga(i, 'paese', e.target.value)} />
@@ -119,8 +125,17 @@ function ModuloAsset({ iniziale, onFine }) {
         </div>
       ))}
       <div className="riga-totale">
-        <button type="button" className="piccolo" onClick={() => setF((x) => ({ ...x, righe: [...x.righe, { paese: '', percentuale: '' }] }))}>+ Paese</button>
-        <span className={esposizione.totale === 10000 ? 'ok' : 'attenzione'}>Totale: {numero(esposizione.totale / 100)}%</span>
+        <span className="riga-azioni">
+          <button type="button" className="piccolo" onClick={() => setF((x) => ({ ...x, righe: [...x.righe, { paese: '', percentuale: '' }] }))}>+ Paese</button>
+          {compilate && (
+            <button type="button" className="piccolo" onClick={() => setF((x) => ({ ...x, righe: [{ paese: '', percentuale: '' }] }))}>Lascia vuota</button>
+          )}
+        </span>
+        {compilate ? (
+          <span className={esposizione.totale === 10000 ? 'ok' : 'attenzione'}>Totale: {numero(esposizione.totale / 100)}%</span>
+        ) : (
+          <span className="nota">Non impostata</span>
+        )}
       </div>
 
       {errore && <p className="errore">{errore}</p>}
