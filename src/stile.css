@@ -1,0 +1,169 @@
+:root {
+  --sfondo: #f4f6f5;
+  --superficie: #ffffff;
+  --testo: #1c2422;
+  --testo-tenue: #5d6966;
+  --bordo: #dde3e1;
+  --primario: #0f766e;
+  --primario-testo: #ffffff;
+  --pericolo: #b42318;
+  --successo: #067647;
+  --attenzione: #b54708;
+  --raggio: 10px;
+  --nav-altezza: 64px;
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--testo);
+  background: var(--sfondo);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sfondo: #111816;
+    --superficie: #1a2321;
+    --testo: #e6ecea;
+    --testo-tenue: #9aa8a4;
+    --bordo: #2c3835;
+    --primario: #2dd4bf;
+    --primario-testo: #04201c;
+    --pericolo: #f97066;
+    --successo: #47cd89;
+    --attenzione: #fdb022;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sfondo); }
+h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+h3 { font-size: 1rem; margin: 1rem 0 0.5rem; }
+
+input, select, button { font: inherit; color: inherit; }
+input, select {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  background: var(--superficie);
+  min-height: 44px;
+}
+input[type='checkbox'] { width: auto; min-height: 0; }
+label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.9rem; color: var(--testo-tenue); }
+
+button {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  background: var(--superficie);
+  cursor: pointer;
+  min-height: 44px;
+}
+button.primario { background: var(--primario); color: var(--primario-testo); border-color: var(--primario); font-weight: 600; }
+button.pericolo { color: var(--pericolo); }
+button.piccolo { padding: 0.3rem 0.6rem; min-height: 36px; font-size: 0.85rem; }
+button:disabled { opacity: 0.6; cursor: default; }
+
+.nota { color: var(--testo-tenue); font-size: 0.88rem; margin: 0.25rem 0 0.75rem; }
+.errore { color: var(--pericolo); font-size: 0.9rem; margin: 0.4rem 0; }
+.successo { color: var(--successo); font-size: 0.9rem; margin: 0.4rem 0; }
+.ok { color: var(--successo); font-weight: 600; }
+.attenzione { color: var(--attenzione); font-weight: 600; }
+.caricamento { padding: 2rem; text-align: center; color: var(--testo-tenue); }
+.etichetta {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--bordo);
+  color: var(--testo-tenue);
+}
+
+/* Layout: menu in basso su telefono, laterale su schermi larghi */
+.app { min-height: 100vh; }
+.contenuto { padding: 1rem 1rem calc(var(--nav-altezza) + 1.5rem); max-width: 900px; margin: 0 auto; }
+.navigazione {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: calc(var(--nav-altezza) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  background: var(--superficie);
+  border-top: 1px solid var(--bordo);
+  z-index: 10;
+}
+.marchio, .esci { display: none; }
+.voce-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.72rem;
+  color: var(--testo-tenue);
+  text-decoration: none;
+}
+.voce-nav .icona { font-size: 1.25rem; }
+.voce-nav.active { color: var(--primario); font-weight: 600; }
+
+@media (min-width: 768px) {
+  .navigazione {
+    inset: 0 auto 0 0;
+    width: 220px;
+    height: auto;
+    flex-direction: column;
+    padding: 1rem 0.75rem;
+    gap: 0.25rem;
+    border-top: none;
+    border-right: 1px solid var(--bordo);
+  }
+  .marchio { display: block; font-weight: 700; padding: 0.5rem 0.75rem 1rem; }
+  .voce-nav { flex: none; flex-direction: row; justify-content: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; border-radius: 8px; font-size: 0.95rem; }
+  .voce-nav.active { background: var(--sfondo); }
+  .esci { display: block; margin-top: auto; }
+  .contenuto { margin-left: 220px; padding: 2rem; }
+}
+
+/* Schede e moduli */
+.scheda { background: var(--superficie); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 1rem; margin-bottom: 1rem; }
+.intestazione-scheda { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.interruttore { flex-direction: row; align-items: center; gap: 0.4rem; font-size: 0.88rem; }
+.schede { display: flex; gap: 0.4rem; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 2px; }
+.scheda-link {
+  white-space: nowrap;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bordo);
+  background: var(--superficie);
+  color: var(--testo);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.scheda-link.active { background: var(--primario); color: var(--primario-testo); border-color: var(--primario); }
+.modulo { display: flex; flex-direction: column; gap: 0.75rem; }
+.griglia { display: grid; gap: 0.75rem; }
+@media (min-width: 600px) { .griglia { grid-template-columns: 1fr 1fr; } }
+.azioni-modulo { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+/* Elenchi */
+.riga-voce { border-bottom: 1px solid var(--bordo); padding: 0.4rem 0; }
+.riga-voce:last-child { border-bottom: none; }
+.riga-principale { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.riga-nome { flex: 1; min-width: 8rem; }
+.riga-azioni { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.riga-modifica { display: flex; gap: 0.4rem; flex: 1; align-items: center; }
+.archiviata > .riga-principale .riga-nome, .asset-voce.archiviata strong { color: var(--testo-tenue); }
+.figli { margin-left: 1.1rem; padding-left: 0.6rem; border-left: 2px solid var(--bordo); }
+.espandi { border: none; background: none; padding: 0; min-height: 36px; width: 28px; font-size: 1rem; color: var(--testo-tenue); }
+.aggiungi-voce { margin-top: 0.5rem; }
+.asset-voce { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem 0; border-bottom: 1px solid var(--bordo); }
+@media (min-width: 600px) { .asset-voce { flex-direction: row; justify-content: space-between; align-items: flex-start; } }
+.riga-esposizione { display: grid; grid-template-columns: 1fr 6rem auto; gap: 0.4rem; align-items: center; }
+.riga-totale { display: flex; justify-content: space-between; align-items: center; }
+
+/* Accesso */
+.accesso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.accesso-scheda { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 0.9rem; }
