@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { supabase } from '../supabase'
+import ProtezioneErrori from './ProtezioneErrori'
 
 const sezioni = [
   { a: '/', etichetta: 'Dashboard', icona: '◧', esatto: true },
@@ -9,6 +10,7 @@ const sezioni = [
 ]
 
 export default function Layout() {
+  const { pathname } = useLocation()
   return (
     <div className="app">
       <nav className="navigazione">
@@ -22,7 +24,10 @@ export default function Layout() {
         <button className="esci" onClick={() => supabase.auth.signOut()}>Esci</button>
       </nav>
       <main className="contenuto">
-        <Outlet />
+        {/* la key azzera l'errore quando si cambia sezione */}
+        <ProtezioneErrori key={pathname}>
+          <Outlet />
+        </ProtezioneErrori>
       </main>
     </div>
   )
