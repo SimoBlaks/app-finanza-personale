@@ -10,6 +10,10 @@ Ogni tabella ha una colonna `user_id` (compilata in automatico con l'utente che 
 
 Solo EUR.
 
+## 2026-10-19 · Categoria facoltativa (modifica SPEC 4.4)
+
+Nelle transazioni (e ricorrenze) è obbligatoria solo la **macrocategoria**; categoria e microcategoria sono facoltative. La microcategoria si può indicare solo insieme alla sua categoria, e la gerarchia resta sempre coerente.
+
 ## 2026-10-19 · Liquidità e spese condivise (da applicare al passo 6)
 
 La formula della SPEC sottrae dalla liquidità la quota personale e in più conta i debiti: per una spesa pagata da un'altra persona il patrimonio scenderebbe due volte.

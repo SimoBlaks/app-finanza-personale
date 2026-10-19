@@ -53,7 +53,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
     setErrore('')
     if (!f.data) return setErrore('Indica la data.')
     if (!importo || Number(importo) <= 0) return setErrore('Inserisci un importo maggiore di zero.')
-    if (!f.categoria.catId) return setErrore('Scegli almeno macrocategoria e categoria.')
+    if (!f.categoria.macroId) return setErrore('Scegli almeno la macrocategoria.')
     if (f.condivisa) {
       if (!f.persona_id) return setErrore('Scegli con chi dividere la spesa.')
       if (percentuale === null || Number(percentuale) < 0 || Number(percentuale) > 100)
@@ -72,7 +72,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
       importo_totale: importo,
       nota: f.nota.trim() || null,
       macrocategoria_id: f.categoria.macroId,
-      categoria_id: f.categoria.catId,
+      categoria_id: f.categoria.catId || null,
       microcategoria_id: f.categoria.microId || null,
       condivisa: f.condivisa,
       pagata_da: f.condivisa ? f.pagata_da : null,

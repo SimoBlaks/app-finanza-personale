@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { normalizza, percorsiAttivi, percorso } from '../lib/categorie'
 
-// Campo categoria con autocompletamento (SPEC 4.3 e 4.4).
+// Campo categoria con autocompletamento (SPEC 4.3 e 4.4; categoria e micro facoltative, vedi DECISIONI.md).
 // valore: { macroId, catId, microId }; onChange riceve lo stesso oggetto.
 export default function SceltaCategoria({ albero, valore, onChange }) {
   const [testo, setTesto] = useState('')
@@ -20,14 +20,13 @@ export default function SceltaCategoria({ albero, valore, onChange }) {
           <span>{percorso(albero, macroId, catId, microId)}</span>
           <button type="button" className="piccolo" onClick={() => { setTesto(''); onChange({}) }}>Cambia</button>
         </div>
-        {!catId && (
+        {!catId && categorie.length > 0 && (
           <>
-            <p className="nota">Scegli la categoria:</p>
+            <p className="nota">Categoria (facoltativa):</p>
             <div className="pulsanti-scelta">
               {categorie.map((c) => (
                 <button type="button" key={c.id} className="piccolo" onClick={() => onChange({ macroId, catId: c.id })}>{c.nome}</button>
               ))}
-              {!categorie.length && <span className="errore">Questa macrocategoria non ha categorie attive.</span>}
             </div>
           </>
         )}
