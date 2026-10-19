@@ -7,6 +7,7 @@ import { fattore, mostraPrezzo, mostraQuantita } from '../../lib/investimenti'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
 import ModuloOperazione from './ModuloOperazione'
 import AggiornaPrezzi from './AggiornaPrezzi'
+import StoricoPrezzi from './StoricoPrezzi'
 
 const percento = (n) => `${n > 0 ? '+' : ''}${numero(n.toFixed(2))}%`
 
@@ -49,6 +50,13 @@ export default function Investimenti() {
     return (
       <section>
         <AggiornaPrezzi asset={asset} posizioni={posizioni} ultimi={ultimi} impostazioni={impostazioni} onFine={chiudi} />
+      </section>
+    )
+
+  if (modulo?.tipo === 'storico')
+    return (
+      <section>
+        <StoricoPrezzi asset={modulo.asset} onFine={chiudi} />
       </section>
     )
 
@@ -122,6 +130,9 @@ export default function Investimenti() {
             </dl>
             {v.senzaPrezzo && <p className="etichetta-avviso">nessun prezzo disponibile: valore calcolato al PMC</p>}
             {v.prezzoVecchio && <p className="etichetta-avviso">prezzo vecchio</p>}
+            <div className="riga-azioni azioni-posizione">
+              <button className="piccolo" onClick={() => setModulo({ tipo: 'storico', asset: a })}>Storico prezzi</button>
+            </div>
           </div>
         ))}
       </div>

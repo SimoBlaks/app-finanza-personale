@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
+import { useConferma } from '../../components/Conferma'
 import { leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
 
 // Pagamento di saldo con una persona: sposta la liquidità e il saldo con lei,
@@ -15,6 +16,7 @@ export default function ModuloRimborso({ persone, rimborso, onFine }) {
     nota: rimborso?.nota ?? '',
   })
   const [errore, setErrore] = useState('')
+  const conferma = useConferma()
   const imposta = (campo, valore) => setF((x) => ({ ...x, [campo]: valore }))
 
   async function salva(e) {
@@ -32,7 +34,7 @@ export default function ModuloRimborso({ persone, rimborso, onFine }) {
   }
 
   async function elimina() {
-    if (!window.confirm('Eliminare questo rimborso?')) return
+    if (!(await conferma({ titolo: 'Eliminare questo rimborso?', conferma: 'Elimina', pericolo: true }))) return
     const { error } = await supabase.from('pagamenti_saldo').delete().eq('id', f.id)
     if (error) return setErrore(messaggioErrore(error))
     onFine()

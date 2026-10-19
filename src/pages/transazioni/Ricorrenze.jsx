@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
+import { useConferma } from '../../components/Conferma'
 import { percorso } from '../../lib/categorie'
 import { euro } from '../../lib/numeri'
 import { dataBreve, frequenze } from '../../lib/date'
@@ -12,6 +13,7 @@ export default function Ricorrenze({ albero, nomePersona }) {
   const [ricorrenze, setRicorrenze] = useState([])
   const [ultimaEsecuzione, setUltimaEsecuzione] = useState(null)
   const [errore, setErrore] = useState('')
+  const conferma = useConferma()
 
   const carica = useCallback(async () => {
     const [r, j] = await Promise.all([
@@ -64,7 +66,9 @@ export default function Ricorrenze({ albero, nomePersona }) {
                 </button>
                 <button
                   className="piccolo pericolo"
-                  onClick={() => window.confirm('Eliminare la ricorrenza? Le transazioni già create restano.') && esegui(supabase.from('transazioni_ricorrenti').delete().eq('id', r.id))}
+                  onClick={async () =>
+                    (await conferma({ titolo: 'Eliminare la ricorrenza?', messaggio: 'Le transazioni già create restano.', conferma: 'Elimina', pericolo: true })) &&
+                    esegui(supabase.from('transazioni_ricorrenti').delete().eq('id', r.id))}
                 >
                   Elimina
                 </button>

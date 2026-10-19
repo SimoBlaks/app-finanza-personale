@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
+import { useConferma } from '../../components/Conferma'
 import { euro, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
 import { etichettaPrezzo, etichettaQuantita, fattore, mostraPrezzo } from '../../lib/investimenti'
 
@@ -16,6 +17,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
   })
   const [errore, setErrore] = useState('')
   const [invio, setInvio] = useState(false)
+  const conferma = useConferma()
   const imposta = (campo, valore) => setF((x) => ({ ...x, [campo]: valore }))
   const vendita = tipo === 'vendita'
 
@@ -79,7 +81,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
   }
 
   async function elimina() {
-    if (!window.confirm('Eliminare questa operazione?')) return
+    if (!(await conferma({ titolo: 'Eliminare questa operazione?', conferma: 'Elimina', pericolo: true }))) return
     const { error } = await supabase.from('operazioni_investimento').delete().eq('id', operazione.id)
     if (error) return setErrore(messaggioErrore(error))
     onFine()

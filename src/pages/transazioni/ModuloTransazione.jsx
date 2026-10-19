@@ -4,6 +4,7 @@ import { messaggioErrore } from '../../lib/errori'
 import { euro, inCentesimi, leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
 import { aggiungiMesi, frequenze } from '../../lib/date'
 import SceltaCategoria from '../../components/SceltaCategoria'
+import { useConferma } from '../../components/Conferma'
 
 function statoIniziale(t) {
   const data = t?.data ?? oggiISO()
@@ -30,6 +31,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
   const [f, setF] = useState(() => statoIniziale(transazione))
   const [errore, setErrore] = useState('')
   const [invio, setInvio] = useState(false)
+  const conferma = useConferma()
   const nuova = !f.id
 
   // Finché l'utente non tocca la prossima scadenza, la teniamo allineata a data + frequenza.
@@ -97,7 +99,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
   }
 
   async function elimina() {
-    if (!window.confirm('Eliminare questa transazione?')) return
+    if (!(await conferma({ titolo: 'Eliminare questa transazione?', conferma: 'Elimina', pericolo: true }))) return
     const { error } = await supabase.from('transazioni').delete().eq('id', f.id)
     if (error) return setErrore(messaggioErrore(error))
     onFine()

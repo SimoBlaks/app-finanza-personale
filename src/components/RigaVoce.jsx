@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useConferma } from './Conferma'
 
 // Riga di un elenco con rinomina, archivia/ripristina ed elimina.
 // onRinomina, onArchivia e onElimina restituiscono un messaggio d'errore oppure ''.
@@ -6,6 +7,7 @@ export default function RigaVoce({ nome, attiva, onRinomina, onArchivia, onElimi
   const [modifica, setModifica] = useState(false)
   const [valore, setValore] = useState(nome)
   const [errore, setErrore] = useState('')
+  const conferma = useConferma()
 
   async function esegui(azione) {
     setErrore('')
@@ -41,7 +43,7 @@ export default function RigaVoce({ nome, attiva, onRinomina, onArchivia, onElimi
               <button className="piccolo" onClick={() => esegui(onArchivia)}>{attiva ? 'Archivia' : 'Ripristina'}</button>
               <button
                 className="piccolo pericolo"
-                onClick={() => window.confirm(`Eliminare "${nome}"?`) && esegui(onElimina)}
+                onClick={async () => (await conferma({ titolo: `Eliminare "${nome}"?`, conferma: 'Elimina', pericolo: true })) && esegui(onElimina)}
               >
                 Elimina
               </button>

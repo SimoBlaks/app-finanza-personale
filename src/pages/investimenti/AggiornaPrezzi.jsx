@@ -5,6 +5,7 @@ import { messaggioErrore } from '../../lib/errori'
 import { leggiNumero, numero, oggiISO } from '../../lib/numeri'
 import { dataBreve } from '../../lib/date'
 import { mostraPrezzo } from '../../lib/investimenti'
+import { useConferma } from '../../components/Conferma'
 
 // Inserimento manuale dei prezzi di chiusura (SPEC 6.2).
 // Si salvano solo le righe compilate: i prezzi non toccati non ricevono una data nuova.
@@ -17,6 +18,7 @@ export default function AggiornaPrezzi({ asset, posizioni, ultimi, impostazioni,
   const [righe, setRighe] = useState(() => Object.fromEntries(possedute.map((a) => [a.id, { prezzo: '', data: oggiISO() }])))
   const [errore, setErrore] = useState('')
   const [invio, setInvio] = useState(false)
+  const conferma = useConferma()
   const imposta = (id, campo, valore) => setRighe((r) => ({ ...r, [id]: { ...r[id], [campo]: valore } }))
 
   async function salva(e) {
@@ -42,10 +44,13 @@ export default function AggiornaPrezzi({ asset, posizioni, ultimi, impostazioni,
     if (!daSalvare.length) return setErrore('Non hai inserito nessun prezzo.')
     if (
       avvisi.length &&
-      !window.confirm(
-        `Questi prezzi variano più del ${numero(impostazioni.soglia_avviso_prezzo_pct)}% rispetto all'ultimo salvato. ` +
-          `Controlla virgola e punto.\n\n${avvisi.join('\n')}\n\nSalvare comunque?`,
-      )
+      !(await conferma({
+        titolo: 'Controlla i prezzi',
+        messaggio:
+          `Questi prezzi variano più del ${numero(impostazioni.soglia_avviso_prezzo_pct)}% rispetto all'ultimo salvato ` +
+          `(attenzione a virgola e punto):\n\n${avvisi.join('\n')}`,
+        conferma: 'Salva comunque',
+      }))
     )
       return
 

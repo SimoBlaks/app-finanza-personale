@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
+import { useConferma } from '../../components/Conferma'
 import { inCentesimi, leggiNumero, numero, perCampo } from '../../lib/numeri'
 
 const tipologie = { azione: 'Azione', etf: 'ETF', obbligazione: 'Obbligazione' }
@@ -136,6 +137,7 @@ export default function Asset() {
   const [inModifica, setInModifica] = useState(null)
   const [archiviati, setArchiviati] = useState(false)
   const [errore, setErrore] = useState('')
+  const conferma = useConferma()
 
   const carica = useCallback(async () => {
     const { data, error } = await supabase
@@ -199,7 +201,9 @@ export default function Asset() {
             </button>
             <button
               className="piccolo pericolo"
-              onClick={() => window.confirm(`Eliminare "${a.nome}"?`) && esegui(supabase.from('asset').delete().eq('id', a.id))}
+              onClick={async () =>
+                (await conferma({ titolo: `Eliminare "${a.nome}"?`, messaggio: 'Si eliminano anche i suoi prezzi storici.', conferma: 'Elimina', pericolo: true })) &&
+                esegui(supabase.from('asset').delete().eq('id', a.id))}
             >
               Elimina
             </button>
