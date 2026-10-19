@@ -31,6 +31,13 @@ Nelle transazioni (e ricorrenze) è obbligatoria solo la **macrocategoria**; cat
 
 Nessun aggiornamento automatico dei prezzi (niente Edge Function né job per Yahoo Finance): i prezzi di chiusura si inseriscono solo a mano con "Aggiorna Prezzi".
 
+## 2026-10-19 · Pubblicazione su GitHub Pages (al posto di Vercel)
+
+- L'app si pubblica con GitHub Pages; il repository è pubblico (nessun segreto nel codice né nella cronologia, verificato).
+- A ogni push su `main` l'automazione `.github/workflows/pubblica.yml` compila e pubblica l'app. URL e chiave pubblica di Supabase stanno nei secrets del repository.
+- Indirizzi con `#` (es. `/#/transazioni`), perché Pages non sa servire le pagine interne di un'app React; build con percorsi relativi (`base: './'`).
+- Le nuove registrazioni su Supabase vanno disattivate: con il repository pubblico l'indirizzo del progetto è noto.
+
 ## 2026-10-19 · Liquidità e spese condivise (da applicare al passo 6)
 
 La formula della SPEC sottrae dalla liquidità la quota personale e in più conta i debiti: per una spesa pagata da un'altra persona il patrimonio scenderebbe due volte.
