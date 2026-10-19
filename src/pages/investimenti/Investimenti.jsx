@@ -6,8 +6,9 @@ import { euro } from '../../lib/numeri'
 import { dataBreve } from '../../lib/date'
 import { fattore, mostraPrezzo, mostraQuantita } from '../../lib/investimenti'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
-import SchedaPosizione, { percento } from '../../components/SchedaPosizione'
+import SchedaPosizione, { percento, sommaProventi } from '../../components/SchedaPosizione'
 import ModuloOperazione from './ModuloOperazione'
+import ModuloProvento from './ModuloProvento'
 import AggiornaPrezzi from './AggiornaPrezzi'
 import StoricoPrezzi from './StoricoPrezzi'
 
@@ -17,6 +18,7 @@ export default function Investimenti() {
   const [asset, setAsset] = useState(null)
   const [posizioni, setPosizioni] = useState([])
   const [operazioni, setOperazioni] = useState([])
+  const [proventi, setProventi] = useState([])
   const [ultimi, setUltimi] = useState({})
   const [impostazioni, setImpostazioni] = useState(null)
   // dalla dashboard si può arrivare qui con la schermata prezzi già aperta
@@ -24,18 +26,20 @@ export default function Investimenti() {
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
-    const [a, p, o, u, i] = await Promise.all([
+    const [a, p, o, u, i, pv] = await Promise.all([
       supabase.from('asset').select('*').order('nome'),
       supabase.from('posizioni').select('*'),
       supabase.from('operazioni_investimento').select('*').order('data', { ascending: false }).order('created_at', { ascending: false }),
       caricaUltimiPrezzi(),
       caricaImpostazioni(),
+      supabase.from('proventi_investimento').select('*').order('data', { ascending: false }).order('created_at', { ascending: false }),
     ])
-    const err = a.error || p.error || o.error || u.error || i.error
+    const err = a.error || p.error || o.error || u.error || i.error || pv.error
     if (err) return setErrore(messaggioErrore(err))
     setAsset(a.data)
     setPosizioni(p.data)
     setOperazioni(o.data)
+    setProventi(pv.data)
     setUltimi(u.ultimi)
     setImpostazioni(i.impostazioni)
   }, [])
@@ -73,6 +77,20 @@ export default function Investimenti() {
     { valore: 0, costo: 0 },
   )
 
+  const proventiPerAsset = sommaProventi(proventi)
+  // operazioni e proventi insieme, dal più recente
+  const cronologia = [
+    ...operazioni.map((o) => ({ ...o, genere: 'operazione' })),
+    ...proventi.map((x) => ({ ...x, genere: 'provento' })),
+  ].sort((x, y) => y.data.localeCompare(x.data) || y.created_at.localeCompare(x.created_at))
+
+  if (modulo?.tipo === 'provento')
+    return (
+      <section>
+        <ModuloProvento provento={modulo.provento} asset={asset} posizioni={posizioni} onFine={chiudi} />
+      </section>
+    )
+
   if (modulo)
     return (
       <section>
@@ -92,6 +110,7 @@ export default function Investimenti() {
       <div className="azioni-pagina">
         <button className="primario" onClick={() => setModulo({ tipo: 'acquisto', operazione: null })}>+ Nuovo acquisto</button>
         <button onClick={() => setModulo({ tipo: 'vendita', operazione: null })} disabled={!possedute.length}>Vendita</button>
+        <button onClick={() => setModulo({ tipo: 'provento', provento: null })} disabled={!asset.length}>Dividendo / cedola</button>
       </div>
       {!asset.length && <p className="nota">Aggiungi prima gli asset in Impostazioni → Asset.</p>}
       {errore && <p className="errore">{errore}</p>}
@@ -115,7 +134,7 @@ export default function Investimenti() {
       )}
       <div className="griglia-posizioni">
         {valutazioni.map(({ p, a, v }) => (
-          <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v}>
+          <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v} proventi={proventiPerAsset[p.asset_id]}>
             <div className="riga-azioni azioni-posizione">
               <button className="piccolo" onClick={() => setModulo({ tipo: 'storico', asset: a })}>Storico prezzi</button>
             </div>
@@ -124,11 +143,23 @@ export default function Investimenti() {
       </div>
 
       <h2>Cronologia operazioni</h2>
-      {!operazioni.length && <p className="nota">Nessuna operazione registrata.</p>}
-      {operazioni.length > 0 && (
+      {!cronologia.length && <p className="nota">Nessuna operazione registrata.</p>}
+      {cronologia.length > 0 && (
         <div className="scheda elenco-movimenti">
-          {operazioni.map((o) => {
+          {cronologia.map((o) => {
             const a = perId[o.asset_id]
+            if (o.genere === 'provento')
+              return (
+                <button key={o.id} className="movimento" onClick={() => setModulo({ tipo: 'provento', provento: o })}>
+                  <span className="movimento-testo">
+                    <strong>{o.tipo === 'cedola' ? 'Cedola' : 'Dividendo'} · {a?.nome}</strong>
+                    <span className="nota">
+                      {dataBreve(o.data)} · lordo {euro(o.importo_lordo)} · tasse {euro(o.tasse)}{o.nota ? ` · ${o.nota}` : ''}
+                    </span>
+                  </span>
+                  <span className="importo incasso">+{euro(o.importo_netto)}</span>
+                </button>
+              )
             const lordo = Number(o.quantita) * Number(o.prezzo) * fattore(a)
             return (
               <button key={o.id} className="movimento" onClick={() => setModulo({ tipo: o.tipo, operazione: o })}>

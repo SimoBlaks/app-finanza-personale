@@ -6,7 +6,7 @@ import { euro, numero } from '../../lib/numeri'
 import { aggiungiMesi, meseCorrente, nomeMese } from '../../lib/date'
 import { caricaAlbero } from '../../lib/categorie'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
-import SchedaPosizione from '../../components/SchedaPosizione'
+import SchedaPosizione, { sommaProventi } from '../../components/SchedaPosizione'
 import InterruttoreCifre from '../../components/Riservatezza'
 import Area from '../../components/grafici/Area'
 import Ciambella from '../../components/grafici/Ciambella'
@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
-    const [liq, saldi, pos, asset, prezzi, imp, job, albero, mensile] = await Promise.all([
+    const [liq, saldi, pos, asset, prezzi, imp, job, albero, mensile, proventi] = await Promise.all([
       supabase.from('liquidita').select('*').maybeSingle(),
       supabase.from('saldi_persone').select('*').order('nome'),
       supabase.from('posizioni').select('*'),
@@ -52,12 +52,13 @@ export default function Dashboard() {
       supabase.from('esecuzioni_job').select('*').eq('job', 'ricorrenze').order('eseguito_il', { ascending: false }).limit(1).maybeSingle(),
       caricaAlbero(),
       supabase.from('riepilogo_mensile').select('mese, entrate, uscite, movimento_liquidita').order('mese'),
+      supabase.from('proventi_investimento').select('asset_id, importo_netto'),
     ])
-    const err = liq.error || saldi.error || pos.error || asset.error || prezzi.error || imp.error || job.error || albero.errore || mensile.error
+    const err = liq.error || saldi.error || pos.error || asset.error || prezzi.error || imp.error || job.error || albero.errore || mensile.error || proventi.error
     if (err) return setErrore(messaggioErrore(err))
     setD({
       liquidita: liq.data, saldi: saldi.data, posizioni: pos.data, asset: asset.data, ultimi: prezzi.ultimi,
-      impostazioni: imp.impostazioni, job: job.data, albero, mensile: mensile.data,
+      impostazioni: imp.impostazioni, job: job.data, albero, mensile: mensile.data, proventi: sommaProventi(proventi.data),
     })
   }, [])
 
@@ -212,7 +213,7 @@ export default function Dashboard() {
       </div>
       {!valutazioni.length && <p className="nota">Nessun asset posseduto.</p>}
       <div className="griglia-posizioni">
-        {valutazioni.map(({ p, a, v }) => <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v} />)}
+        {valutazioni.map(({ p, a, v }) => <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v} proventi={d.proventi[p.asset_id]} />)}
       </div>
 
       <p className="stato-job">

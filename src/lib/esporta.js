@@ -61,13 +61,14 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
   avanzamento('Leggo i dati…')
   const da = `${annoDa}-01-01`
   const a = `${annoA}-12-31`
-  const [albero, persone, asset, transazioni, rimborsi, operazioni] = await Promise.all([
+  const [albero, persone, asset, transazioni, rimborsi, operazioni, proventi] = await Promise.all([
     caricaAlbero(),
     supabase.from('persone').select('id, nome'),
     supabase.from('asset').select('id, nome, ticker_isin, quotazione'),
     leggiTutto(() => supabase.from('transazioni').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
     leggiTutto(() => supabase.from('pagamenti_saldo').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
     leggiTutto(() => supabase.from('operazioni_investimento').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
+    leggiTutto(() => supabase.from('proventi_investimento').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
   ])
   if (albero.errore) throw albero.errore
   if (persone.error) throw persone.error
@@ -178,12 +179,25 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
     riga.getCell(4).numFmt = FORMATO_EURO
   }
 
-  // Investimenti: acquisti e vendite
+  // Investimenti: acquisti, vendite, dividendi e cedole (in ordine di data)
   const fi = wb.addWorksheet('Investimenti')
-  intestazione(fi, ['Data', 'Tipo', 'Asset', 'Ticker / ISIN', 'Quantità', 'Prezzo', 'Spese', 'Plusvalore', 'Tasse', 'Liquidità incassata'],
-    [12, 10, 28, 16, 13, 13, 11, 13, 11, 18])
-  for (const o of operazioni) {
+  intestazione(fi, ['Data', 'Tipo', 'Asset', 'Ticker / ISIN', 'Quantità', 'Prezzo', 'Spese', 'Plusvalore', 'Tasse', 'Liquidità incassata', 'Provento lordo'],
+    [12, 11, 28, 16, 13, 13, 11, 13, 11, 18, 15])
+  const righeInvestimenti = [
+    ...operazioni.map((o) => ({ ...o, genere: 'operazione' })),
+    ...proventi.map((o) => ({ ...o, genere: 'provento' })),
+  ].sort((x, y) => x.data.localeCompare(y.data) || x.created_at.localeCompare(y.created_at))
+  for (const o of righeInvestimenti) {
     const x = perAsset[o.asset_id]
+    if (o.genere === 'provento') {
+      const riga = fi.addRow([
+        comeData(o.data), o.tipo === 'cedola' ? 'Cedola' : 'Dividendo', x?.nome ?? '?', x?.ticker_isin ?? '',
+        null, null, null, null, euro2(o.tasse), euro2(o.importo_netto), euro2(o.importo_lordo),
+      ])
+      riga.getCell(1).numFmt = FORMATO_DATA
+      for (const c of [9, 10, 11]) riga.getCell(c).numFmt = FORMATO_EURO
+      continue
+    }
     const riga = fi.addRow([
       comeData(o.data), o.tipo === 'acquisto' ? 'Acquisto' : 'Vendita', x?.nome ?? '?', x?.ticker_isin ?? '',
       Number(o.quantita), Number(o.prezzo), euro2(o.spese),
@@ -196,5 +210,5 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
     for (const c of [7, 8, 9, 10]) riga.getCell(c).numFmt = FORMATO_EURO
   }
 
-  return { wb, riepilogo: { transazioni: transazioni.length, anni: perAnno.size, rimborsi: rimborsi.length, operazioni: operazioni.length } }
+  return { wb, riepilogo: { transazioni: transazioni.length, anni: perAnno.size, rimborsi: rimborsi.length, operazioni: operazioni.length + proventi.length } }
 }

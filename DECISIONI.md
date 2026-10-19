@@ -62,3 +62,11 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 
 - la liquidità conta i movimenti **dalla data del saldo iniziale fino a oggi** (quelli precedenti sono già nel saldo iniziale, quelli futuri non sono ancora avvenuti); acquisti di asset: − (valore + spese), vendite: + liquidità incassata;
 - i saldi con le persone contano tutte le spese condivise e i rimborsi fino a oggi, a prescindere dalla data del saldo iniziale.
+
+## 2026-10-19 · Dividendi e cedole
+
+- Si registrano nella pagina Investimenti ("Dividendo / cedola") nella tabella `proventi_investimento`: asset, tipo (dividendo o cedola), data di incasso, **importo lordo e tasse**; il netto lo calcola il database. Le tasse si propongono con l'aliquota dell'asset e si possono correggere.
+- Il netto **aumenta la liquidità** (viste `liquidita` e `riepilogo_mensile`) e quindi il patrimonio, ma **non conta tra le entrate** né nel tasso di risparmio.
+- Non toccano il PMC. Nella scheda di una posizione compaiono il totale netto incassato e il "guadagno con proventi".
+- Nell'export Excel stanno nel foglio "Investimenti", con la colonna "Provento lordo".
+- Le cedole passate del file Excel non vengono importate.
