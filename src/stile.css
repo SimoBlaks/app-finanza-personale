@@ -229,6 +229,18 @@ button:disabled { opacity: 0.6; cursor: default; }
 .riga-prezzo { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem 0; border-bottom: 1px solid var(--bordo); }
 .riga-prezzo:last-of-type { border-bottom: none; }
 
+/* Filtri della cronologia */
+.barra-filtri { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+.barra-filtri input { flex: 1; }
+.barra-filtri button { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.barra-filtri button.attivo { border-color: var(--primario); color: var(--primario); font-weight: 600; }
+.contatore { min-width: 1.3rem; height: 1.3rem; padding: 0 0.3rem; border-radius: 999px; background: var(--primario); color: var(--primario-testo); font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; }
+.pannello-filtri { display: flex; flex-direction: column; gap: 0.9rem; }
+.pannello-filtri .griglia.periodo { grid-template-columns: 1fr 1fr; margin-top: 0.5rem; }
+.riepilogo-elenco { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; margin: 0 0 0.75rem; font-size: 0.92rem; }
+.riepilogo-elenco .nota { margin: 0; }
+.carica-altre { display: block; width: 100%; margin: 1rem 0; }
+
 /* Selettore categoria */
 .scelta-categoria { display: flex; flex-direction: column; gap: 0.4rem; }
 .elenco-categorie { max-height: 260px; overflow-y: auto; border: 1px solid var(--bordo); border-radius: 8px; padding: 0.25rem; }
