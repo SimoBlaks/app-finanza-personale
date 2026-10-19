@@ -5,6 +5,8 @@ import { euro, inCentesimi } from '../../lib/numeri'
 import { dataBreve, meseCorrente, nomeMese, spostaMese } from '../../lib/date'
 import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Colonne from '../../components/grafici/Colonne'
+import Ciambella from '../../components/grafici/Ciambella'
+import { COLORE_ALTRO, mappaColori } from '../../components/grafici/colori'
 
 const NESSUNA = 'nessuna'
 const nomeMeseBreve = (m) => new Date(2026, m, 15).toLocaleDateString('it-IT', { month: 'short' }).replace('.', '')
@@ -22,9 +24,9 @@ function raggruppa(spese, chiave, nome) {
 }
 
 // Spese per categoria (SPEC 3.2): vista mese o anno, con discesa macro → categoria → micro.
-export default function SezioneSpese({ albero }) {
+export default function SezioneSpese({ albero, meseIniziale }) {
   const [vista, setVista] = useState('mese')
-  const [mese, setMese] = useState(meseCorrente)
+  const [mese, setMese] = useState(() => meseIniziale ?? meseCorrente())
   const [filtro, setFiltro] = useState({}) // { macroId, catId, microId }
   const [spese, setSpese] = useState([])
   const [tutte, setTutte] = useState(false)
@@ -58,12 +60,27 @@ export default function SezioneSpese({ albero }) {
   const delPeriodo = vista === 'mese' ? perCategoria.filter((s) => s.data.startsWith(mese)) : perCategoria
   const totale = delPeriodo.reduce((t, s) => t + inCentesimi(String(s.quota_personale)), 0) / 100
 
-  // livello del grafico a barre secondo il filtro
+  // Colore fisso per macrocategoria, deciso sulle spese dell'intero anno:
+  // le 7 più grandi hanno un colore proprio, le altre finiscono in "Altro".
+  const colori = useMemo(() => {
+    const totali = new Map()
+    for (const s of spese) totali.set(s.macrocategoria_id, (totali.get(s.macrocategoria_id) ?? 0) + Number(s.quota_personale))
+    return mappaColori(totali, 7)
+  }, [spese])
+  const coloreMacro = filtro.macroId ? colori.get(filtro.macroId) : null
+
+  // livello del grafico secondo il filtro: ciambella per le macro, barre per i livelli sotto
   const perBarre = delPeriodo
   let barre
   let scegli
+  let fette = null
   if (!filtro.macroId) {
-    barre = raggruppa(perBarre, 'macrocategoria_id', (id) => nome(id))
+    const perMacro = raggruppa(perBarre, 'macrocategoria_id', (id) => nome(id))
+    const conColore = perMacro.filter((v) => colori.get(v.id) !== COLORE_ALTRO)
+    const altre = perMacro.filter((v) => colori.get(v.id) === COLORE_ALTRO)
+    fette = conColore.map((v) => ({ ...v, colore: colori.get(v.id) }))
+    if (altre.length) fette.push({ id: 'altro', etichetta: `Altro (${altre.map((a) => a.etichetta).join(', ')})`, valore: altre.reduce((t, a) => t + a.valore, 0), colore: COLORE_ALTRO })
+    barre = []
     scegli = (v) => setFiltro({ macroId: v.id })
   } else if (!filtro.catId) {
     barre = raggruppa(perBarre, 'categoria_id', (id) => nome(id, 'Senza categoria'))
@@ -127,7 +144,12 @@ export default function SezioneSpese({ albero }) {
         />
       )}
 
-      {barre.length > 0 && <BarreOrizzontali voci={barre} formatta={euro} onScegli={scegli ?? undefined} />}
+      {fette && fette.length > 0 && (
+        <Ciambella voci={fette} formatta={euro} titoloCentro={vista === 'mese' ? 'Nel mese' : "Nell'anno"} onScegli={scegli} scegliibile={(v) => v.id !== 'altro'} />
+      )}
+      {barre.length > 0 && (
+        <BarreOrizzontali voci={barre.map((b) => ({ ...b, colore: coloreMacro }))} formatta={euro} onScegli={scegli ?? undefined} />
+      )}
       {!delPeriodo.length && <p className="nota">Nessuna spesa in questo periodo.</p>}
 
       {delPeriodo.length > 0 && (

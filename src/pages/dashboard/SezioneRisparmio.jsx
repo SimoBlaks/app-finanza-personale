@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, inCentesimi, numero } from '../../lib/numeri'
+import { euro, inCentesimi } from '../../lib/numeri'
 import { limitiMese, meseCorrente, nomeMese, spostaMese } from '../../lib/date'
+import Anello from '../../components/grafici/Anello'
 
 // Tasso di risparmio del mese (SPEC 3.3), di default il mese precedente.
 // Usa la quota personale; i rimborsi non contano.
@@ -32,7 +33,7 @@ export default function SezioneRisparmio() {
   }, [mese])
 
   return (
-    <div className="scheda">
+    <div className="scheda scheda-risparmio">
       <div className="intestazione-scheda">
         <h2>Tasso di risparmio</h2>
         <div className="selettore-mese compatto">
@@ -43,15 +44,18 @@ export default function SezioneRisparmio() {
       </div>
       {errore && <p className="errore">{errore}</p>}
       {dati && (
-        <>
-          <p className={`cifra ${dati.tasso !== null && dati.tasso < 0 ? 'negativa' : ''}`}>
-            {dati.tasso === null ? 'n/d' : `${numero(dati.tasso.toFixed(1))}%`}
-          </p>
-          <p className="nota">
-            Entrate {euro(dati.entrate)} · Uscite {euro(dati.uscite)}
-            {dati.tasso === null && ' · nessuna entrata nel mese'}
-          </p>
-        </>
+        <div className="risparmio-corpo">
+          <Anello percentuale={dati.tasso} />
+          <dl className="dati risparmio-dati">
+            <dt><span className="pallino" style={{ background: 'var(--entrate)' }} />Entrate</dt>
+            <dd>{euro(dati.entrate)}</dd>
+            <dt><span className="pallino" style={{ background: 'var(--uscite)' }} />Uscite</dt>
+            <dd>{euro(dati.uscite)}</dd>
+            <dt>Risparmiato</dt>
+            <dd><strong>{euro(dati.entrate - dati.uscite)}</strong></dd>
+          </dl>
+          {dati.tasso === null && <p className="nota">Nessuna entrata nel mese: il tasso non è calcolabile.</p>}
+        </div>
       )}
     </div>
   )
