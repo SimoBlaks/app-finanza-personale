@@ -347,8 +347,8 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .barra-traccia { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
 .barra { display: block; height: 18px; background: var(--primario); border-radius: 0 4px 4px 0; flex: none; max-width: calc(100% - 5.5rem); }
 .barra-valore { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--testo); }
-.colonne { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; height: 180px; margin: 0.5rem 0 1rem; }
-.colonna { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; border: none; background: none; padding: 0; min-height: 0; border-radius: 6px; cursor: pointer; }
+.colonne { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; height: 180px; margin: 0.5rem 0 1rem; }
+.colonna { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 0; border: none; background: none; padding: 0; min-height: 0; border-radius: 6px; cursor: pointer; }
 .colonna:hover, .colonna:focus-visible { background: var(--sfondo); }
 .colonna-valore { font-size: 0.68rem; color: var(--testo-tenue); visibility: hidden; white-space: nowrap; height: 1rem; }
 .colonna:hover .colonna-valore, .colonna:focus-visible .colonna-valore, .colonna.selezionata .colonna-valore { visibility: visible; }
@@ -481,3 +481,5 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
   .cifra-eroe, .riquadro-kpi.liquidita .kpi-valore, .riquadro-kpi.investimenti .kpi-valore,
   .area-liquidita .valore-area strong, .esposizione .ciambella-valore
 ) { filter: blur(0.45em); user-select: none; }
+/* Spese / Entrate in dashboard: interruttore al posto del titolo */
+.interruttore-vista.sezione-tipo button { font-size: 1rem; padding: 0.25rem 1rem; min-height: 36px; }

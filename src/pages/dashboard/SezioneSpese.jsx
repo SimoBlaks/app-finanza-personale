@@ -23,8 +23,11 @@ function raggruppa(spese, chiave, nome) {
     .sort((a, b) => b.valore - a.valore)
 }
 
-// Spese per categoria (SPEC 3.2): vista mese o anno, con discesa macro → categoria → micro.
+// Spese o entrate per categoria (SPEC 3.2): vista mese o anno, con discesa macro → categoria → micro.
+const tipi = { spesa: { titolo: 'Spese', plurale: 'spese', singolare: 'spesa' }, incasso: { titolo: 'Entrate', plurale: 'entrate', singolare: 'entrata' } }
+
 export default function SezioneSpese({ albero, meseIniziale }) {
+  const [tipo, setTipo] = useState('spesa')
   const [vista, setVista] = useState('mese')
   const [mese, setMese] = useState(() => meseIniziale ?? meseCorrente())
   const [filtro, setFiltro] = useState({}) // { macroId, catId, microId }
@@ -37,12 +40,12 @@ export default function SezioneSpese({ albero, meseIniziale }) {
     supabase
       .from('transazioni')
       .select('id, data, nota, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
-      .eq('tipo', 'spesa')
+      .eq('tipo', tipo)
       .gte('data', `${anno}-01-01`)
       .lte('data', `${anno}-12-31`)
       .order('data', { ascending: false })
       .then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setSpese(data)))
-  }, [anno])
+  }, [anno, tipo])
 
   const nome = (id, vuoto) => (id === NESSUNA ? vuoto : albero.mappa[id]?.nome ?? '?')
 
@@ -107,10 +110,23 @@ export default function SezioneSpese({ albero, meseIniziale }) {
 
   const elenco = tutte ? delPeriodo : delPeriodo.slice(0, 10)
 
+  // cambiando tra spese ed entrate si riparte da "Tutte" le categorie
+  function cambiaTipo(k) {
+    if (k === tipo) return
+    setSpese([])
+    setFiltro({})
+    setTutte(false)
+    setTipo(k)
+  }
+
   return (
     <div className="scheda sezione-spese">
       <div className="intestazione-scheda">
-        <h2>Spese</h2>
+        <div className="interruttore-vista sezione-tipo" role="group" aria-label="Spese o entrate">
+          {Object.entries(tipi).map(([k, t]) => (
+            <button key={k} className={tipo === k ? 'attivo' : ''} aria-pressed={tipo === k} onClick={() => cambiaTipo(k)}>{t.titolo}</button>
+          ))}
+        </div>
         <div className="interruttore-vista">
           <button className={vista === 'mese' ? 'attivo' : ''} onClick={() => setVista('mese')}>Mese</button>
           <button className={vista === 'anno' ? 'attivo' : ''} onClick={() => setVista('anno')}>Anno</button>
@@ -134,7 +150,8 @@ export default function SezioneSpese({ albero, meseIniziale }) {
           ),
         )}
       </nav>
-      <p className="totale-periodo">Totale (tua quota): <strong>{euro(totale)}</strong></p>
+      {/* con la ciambella il totale è già al centro: si mostra solo scendendo nelle categorie */}
+      {!fette?.length && delPeriodo.length > 0 && <p className="totale-periodo">Totale (tua quota): <strong>{euro(totale)}</strong></p>}
 
       {vista === 'anno' && (
         <Colonne
@@ -150,11 +167,11 @@ export default function SezioneSpese({ albero, meseIniziale }) {
       {barre.length > 0 && (
         <BarreOrizzontali voci={barre.map((b) => ({ ...b, colore: coloreMacro }))} formatta={euro} onScegli={scegli ?? undefined} />
       )}
-      {!delPeriodo.length && <p className="nota">Nessuna spesa in questo periodo.</p>}
+      {!delPeriodo.length && <p className="nota">Nessuna {tipi[tipo].singolare} in questo periodo.</p>}
 
       {delPeriodo.length > 0 && (
         <>
-          <h3>Elenco spese</h3>
+          <h3>Elenco {tipi[tipo].plurale}</h3>
           <div className="elenco-movimenti">
             {elenco.map((s) => (
               <div key={s.id} className="movimento statico">
