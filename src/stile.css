@@ -32,8 +32,35 @@
   background: var(--sfondo);
 }
 
+/* Tema scuro: in automatico segue il telefono (se non si è scelto "Chiaro"),
+   oppure sempre se in Impostazioni si è scelto "Scuro" (data-tema su <html>).
+   I colori sono ripetuti nei due blocchi: se ne cambi uno, cambia anche l'altro. */
+:root[data-tema='chiaro'] { color-scheme: light; }
+:root[data-tema='scuro'] {
+  color-scheme: dark;
+  --sfondo: #111816;
+  --superficie: #1a2321;
+  --testo: #e6ecea;
+  --testo-tenue: #9aa8a4;
+  --bordo: #2c3835;
+  --primario: #2dd4bf;
+  --primario-testo: #04201c;
+  --pericolo: #f97066;
+  --successo: #47cd89;
+  --attenzione: #fdb022;
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --serie-4: #c98500;
+  --serie-5: #d55181;
+  --serie-6: #008300;
+  --serie-7: #9085e9;
+  --serie-8: #e66767;
+  --serie-altro: #6f6e69;
+  --traccia: #26312e;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema='chiaro']) {
     --sfondo: #111816;
     --superficie: #1a2321;
     --testo: #e6ecea;
@@ -483,3 +510,5 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
 ) { filter: blur(0.45em); user-select: none; }
 /* Spese / Entrate in dashboard: interruttore al posto del titolo */
 .interruttore-vista.sezione-tipo button { font-size: 1rem; padding: 0.25rem 1rem; min-height: 36px; }
+.scelta-tema { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.scelta-tema .etichetta-campo { margin: 0; }

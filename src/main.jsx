@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router-dom'
 import { SessioneProvider } from './auth/Sessione'
 import { ConfermaProvider } from './components/Conferma'
 import App from './App'
+import './components/Tema' // applica subito il tema scelto, prima di disegnare la pagina
 import './stile.css'
 
 createRoot(document.getElementById('root')).render(
