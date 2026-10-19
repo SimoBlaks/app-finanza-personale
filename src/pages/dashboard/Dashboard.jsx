@@ -170,7 +170,9 @@ export default function Dashboard() {
 
       <SezioneSpese albero={d.albero} meseIniziale={serie.ultimoConSpese} />
 
-      <div className="scheda">
+      {/* colonna destra su schermi larghi: liquidità, debiti/crediti ed esposizione */}
+      <div className="colonna-destra">
+      <div className="scheda area-liquidita">
         <div className="intestazione-scheda">
           <h2>Liquidità nel tempo</h2>
           <div className="interruttore-vista">
@@ -182,7 +184,7 @@ export default function Dashboard() {
         <Area punti={liquiditaNelPeriodo} formatta={euro} altezza={200} />
       </div>
 
-      <div className="griglia-dashboard">
+      <div className="griglia-dashboard area-altro">
         <SezioneDebiti saldi={d.saldi} />
         {esposizione.length > 0 ? (
           <div className="scheda">
@@ -195,6 +197,7 @@ export default function Dashboard() {
             <p className="nota">Comparirà quando avrai degli investimenti con l'esposizione geografica impostata.</p>
           </div>
         )}
+      </div>
       </div>
 
       <div className="intestazione-scheda">

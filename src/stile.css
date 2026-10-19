@@ -106,7 +106,10 @@ button:disabled { opacity: 0.6; cursor: default; }
 
 /* Layout: menu in basso su telefono, laterale su schermi larghi */
 .app { min-height: 100vh; }
-.contenuto { padding: 1rem 1rem calc(var(--nav-altezza) + 1.5rem); max-width: 900px; margin: 0 auto; }
+.contenuto { padding: 1rem 1rem calc(var(--nav-altezza) + 1.5rem); }
+/* moduli ed elenchi restano di larghezza comoda; la dashboard può allargarsi */
+.contenuto > section { max-width: 960px; margin: 0 auto; }
+.contenuto > section.dashboard { max-width: 1440px; }
 .navigazione {
   position: fixed;
   inset: auto 0 0 0;
@@ -286,7 +289,24 @@ button:disabled { opacity: 0.6; cursor: default; }
 .avviso { font-size: 0.88rem; color: var(--attenzione); margin: 0 0 0.75rem; }
 .griglia-dashboard { display: grid; gap: 1rem; }
 .griglia-dashboard > .scheda { margin-bottom: 0; }
-@media (min-width: 900px) { .griglia-dashboard { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .griglia-dashboard { grid-template-columns: 1fr 1fr; } }
+
+/* Schermi larghi: dashboard su 12 colonne.
+   Spese a sinistra (7 colonne, alte due righe), liquidità e debiti/esposizione a destra. */
+@media (min-width: 1280px) {
+  .dashboard { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+  .dashboard > * { grid-column: 1 / -1; }
+  .dashboard > .scheda, .dashboard > .griglia-dashboard { margin-bottom: 0; }
+  .dashboard > .sezione-spese { grid-column: 1 / span 7; }
+  .dashboard > .colonna-destra { grid-column: 8 / -1; }
+  .colonna-destra .area-altro { grid-template-columns: 1fr; }
+  .dashboard > .intestazione-scheda { margin-top: 0.5rem; }
+  .griglia-posizioni { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-bottom: 0; }
+}
+/* la colonna destra impila i suoi riquadri con lo stesso spazio tra uno e l'altro */
+.colonna-destra { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+.colonna-destra > .scheda { margin-bottom: 0; }
+@media (min-width: 1280px) { .colonna-destra { margin-bottom: 0; } }
 .cifra { font-size: 2.25rem; font-weight: 700; margin: 0.25rem 0; }
 .cifra.negativa { color: var(--pericolo); }
 .selettore-mese.compatto { gap: 0.4rem; margin: 0; font-size: 0.9rem; }
@@ -365,7 +385,7 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .kpi-etichetta { font-size: 0.78rem; color: var(--testo-tenue); }
 .kpi-valore { font-size: 1rem; font-variant-numeric: tabular-nums; }
 .griglia-dashboard.larga { grid-template-columns: 1fr; }
-@media (min-width: 900px) { .griglia-dashboard.larga { grid-template-columns: 1.7fr 1fr; } }
+@media (min-width: 1000px) { .griglia-dashboard.larga { grid-template-columns: 1.7fr 1fr; } }
 .pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; flex: none; }
 
 /* Ciambella */
