@@ -150,3 +150,8 @@ vite.config.ts.timestamp-*
 
 # Configurazione locale di Claude Code
 .claude/
+
+# Fogli di calcolo con dati personali (non vanno mai su GitHub)
+*.xlsx
+*.xls
+*.csv

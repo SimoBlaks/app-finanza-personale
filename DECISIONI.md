@@ -38,6 +38,14 @@ Nessun aggiornamento automatico dei prezzi (niente Edge Function né job per Yah
 - Indirizzi con `#` (es. `/#/transazioni`), perché Pages non sa servire le pagine interne di un'app React; build con percorsi relativi (`base: './'`).
 - Le nuove registrazioni su Supabase vanno disattivate: con il repository pubblico l'indirizzo del progetto è noto.
 
+## 2026-10-19 · Importazione dello storico da Excel (2013 → 30/06/2026)
+
+- Importati 3.174 movimenti dal file "Entrate_Uscite" (fogli annuali), fino al 30/06/2026 (data fino alla quale i conti con le persone erano in pari). Saldo iniziale 0 € dal 01/01/2013.
+- Spese divise a metà: importata solo la propria quota (risultato della formula), come spesa normale; la nota riporta il totale ("divisa a metà: totale …"). Importi con mezzo centesimo arrotondati al centesimo.
+- Esclusa la macrocategoria "Investimenti" (PAC, pensione complementare, cedole): gli investimenti si gestiscono nella sezione Investimenti.
+- Nomi uniformati (trattini bassi → spazi, "lavoro"/"acqua"/"Bollo"/"Cruncyroll" corretti); i prelievi senza categoria in "Speciale > Non classificabile".
+- I dati personali non sono nel repository: l'importazione è avvenuta direttamente nel database e i file Excel/CSV sono esclusi da git.
+
 ## 2026-10-19 · Liquidità e spese condivise (da applicare al passo 6)
 
 La formula della SPEC sottrae dalla liquidità la quota personale e in più conta i debiti: per una spesa pagata da un'altra persona il patrimonio scenderebbe due volte.
