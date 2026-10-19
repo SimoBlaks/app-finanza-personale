@@ -287,9 +287,9 @@ button:disabled { opacity: 0.6; cursor: default; }
 .componenti-patrimonio dt { font-size: 0.82rem; color: var(--testo-tenue); }
 .componenti-patrimonio dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .avviso { font-size: 0.88rem; color: var(--attenzione); margin: 0 0 0.75rem; }
-.griglia-dashboard { display: grid; gap: 1rem; }
+.griglia-dashboard { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
 .griglia-dashboard > .scheda { margin-bottom: 0; }
-@media (min-width: 1000px) { .griglia-dashboard { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .griglia-dashboard { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 
 /* Schermi larghi: dashboard su 12 colonne.
    Spese a sinistra (7 colonne, alte due righe), liquidità e debiti/esposizione a destra. */
@@ -384,8 +384,8 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .riquadro-kpi.debiti .icona-kpi { background: color-mix(in srgb, var(--serie-2) 15%, transparent); color: var(--serie-2); }
 .kpi-etichetta { font-size: 0.78rem; color: var(--testo-tenue); }
 .kpi-valore { font-size: 1rem; font-variant-numeric: tabular-nums; }
-.griglia-dashboard.larga { grid-template-columns: 1fr; }
-@media (min-width: 1000px) { .griglia-dashboard.larga { grid-template-columns: 1.7fr 1fr; } }
+.griglia-dashboard.larga { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1000px) { .griglia-dashboard.larga { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } }
 .pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; flex: none; }
 
 /* Ciambella */
@@ -436,7 +436,10 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .valore-sparkline { position: absolute; right: 0; top: -1.3rem; font-size: 0.75rem; color: var(--testo-tenue); white-space: nowrap; text-transform: capitalize; }
 
 /* Anello del risparmio */
-.risparmio-corpo { display: grid; grid-template-columns: 130px 1fr; gap: 1rem; align-items: center; }
+/* anello e cifre affiancati; se le cifre non ci stanno vanno a capo e l'anello resta sopra, centrato */
+.risparmio-corpo { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.risparmio-corpo .anello { flex: none; margin-inline: auto; }
+.risparmio-corpo .risparmio-dati { flex: 1 0 auto; }
 .anello { width: 130px; height: 130px; }
 .anello-testo { font-size: 22px; font-weight: 700; fill: var(--testo); }
 .anello.buono .anello-pieno { stroke: var(--successo); }
@@ -444,7 +447,12 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .anello.negativo .anello-pieno { stroke: var(--pericolo); }
 .anello.negativo .anello-testo { fill: var(--pericolo); }
 .risparmio-dati dt { display: flex; align-items: center; }
-.risparmio-corpo > .nota { grid-column: 1 / -1; margin: 0; }
+.risparmio-corpo > .nota { flex-basis: 100%; margin: 0; }
+/* il selettore del mese ha una riga tutta sua e larghezza fissa, così nulla si sposta cambiando mese */
+.scheda-risparmio .intestazione-scheda { flex-direction: column; align-items: stretch; gap: 0.25rem; margin-bottom: 0.75rem; }
+.scheda-risparmio .intestazione-scheda h2 { margin: 0; }
+.scheda-risparmio .selettore-mese { justify-content: space-between; }
+.scheda-risparmio .selettore-mese span { flex: 1; text-align: center; }
 
 /* Finestra di conferma */
 .sfondo-dialogo { position: fixed; inset: 0; background: rgb(0 0 0 / 0.45); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
@@ -456,3 +464,20 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
 /* Accesso */
 .accesso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
 .accesso-scheda { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 0.9rem; }
+
+/* Modalità riservata: interruttore e importi sfocati in dashboard */
+.interruttore-cifre { flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: var(--testo-tenue); user-select: none; }
+.interruttore-cifre input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.levetta { position: relative; flex: none; width: 36px; height: 20px; border-radius: 999px; background: var(--bordo); transition: background 0.15s; }
+.levetta::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); transition: transform 0.15s; }
+.interruttore-cifre input:checked + .levetta { background: var(--primario); }
+.interruttore-cifre input:checked + .levetta::after { transform: translateX(16px); }
+.interruttore-cifre input:focus-visible + .levetta { outline: 2px solid var(--primario); outline-offset: 2px; }
+.patrimonio-riga { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.riservatezza { display: flex; flex-direction: column; gap: 0.25rem; }
+.riservatezza .nota { margin: 0; }
+/* si nascondono solo i totali: patrimonio, liquidità e investimenti */
+.cifre-nascoste .dashboard :is(
+  .cifra-eroe, .riquadro-kpi.liquidita .kpi-valore, .riquadro-kpi.investimenti .kpi-valore,
+  .area-liquidita .valore-area strong, .esposizione .ciambella-valore
+) { filter: blur(0.45em); user-select: none; }

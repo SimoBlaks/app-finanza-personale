@@ -7,6 +7,7 @@ import { aggiungiMesi, meseCorrente, nomeMese } from '../../lib/date'
 import { caricaAlbero } from '../../lib/categorie'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
 import SchedaPosizione from '../../components/SchedaPosizione'
+import InterruttoreCifre from '../../components/Riservatezza'
 import Area from '../../components/grafici/Area'
 import Ciambella from '../../components/grafici/Ciambella'
 import ColonneDoppie from '../../components/grafici/ColonneDoppie'
@@ -125,7 +126,10 @@ export default function Dashboard() {
       <div className="scheda patrimonio">
         <div className="patrimonio-testa">
           <div>
-            <span className="patrimonio-etichetta">Patrimonio attuale</span>
+            <div className="patrimonio-riga">
+              <span className="patrimonio-etichetta">Patrimonio attuale</span>
+              <InterruttoreCifre etichetta="Nascondi" />
+            </div>
             <p className="cifra-eroe">{euro(patrimonio)}</p>
             {variazione !== null && (
               <span className={`variazione ${variazione >= 0 ? 'su' : 'giu'}`}>
@@ -187,7 +191,7 @@ export default function Dashboard() {
       <div className="griglia-dashboard area-altro">
         <SezioneDebiti saldi={d.saldi} />
         {esposizione.length > 0 ? (
-          <div className="scheda">
+          <div className="scheda esposizione">
             <h2>Esposizione geografica</h2>
             <Ciambella voci={esposizione} formatta={euro} titoloCentro="Investito" />
           </div>

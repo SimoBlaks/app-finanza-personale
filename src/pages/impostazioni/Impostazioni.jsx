@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import InterruttoreCifre from '../../components/Riservatezza'
 
 const schede = [
   { a: 'categorie', etichetta: 'Categorie' },
@@ -12,6 +13,10 @@ export default function Impostazioni() {
   return (
     <section>
       <h1>Impostazioni</h1>
+      <div className="scheda riservatezza">
+        <InterruttoreCifre etichetta="Nascondi le cifre nella dashboard" />
+        <p className="nota">Sfoca gli importi per chi guarda lo schermo. Vale solo su questo dispositivo.</p>
+      </div>
       <div className="schede">
         {schede.map((s) => (
           <NavLink key={s.a} to={s.a} className="scheda-link">{s.etichetta}</NavLink>
