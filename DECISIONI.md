@@ -21,6 +21,16 @@ Nelle transazioni (e ricorrenze) è obbligatoria solo la **macrocategoria**; cat
 - L'esito di ogni esecuzione va in `esecuzioni_job`. È l'unica tabella senza `user_id`: riguarda il sistema, non i dati personali; RLS attivo, l'utente autenticato la può solo leggere.
 - Le funzioni del job stanno nello schema `privato`, non esposto dalle API.
 
+## 2026-10-19 · PMC e vendite (passo 5a)
+
+- **PMC a media progressiva**: le operazioni di un asset si ripercorrono in ordine cronologico (a parità di data, prima gli acquisti). Gli acquisti aggiungono quantità × prezzo + spese al costo di carico; una vendita toglie quantità × PMC, quindi il PMC resta invariato. Coincide con la formula della SPEC (punto 7) quando non ci sono vendite intermedie.
+- Plusvalore, tasse e liquidità incassata li calcola il database e li salva sulla vendita. Correggere un'operazione passata ricalcola le successive; se la quantità diventerebbe negativa la modifica è rifiutata.
+- Ogni vendita conserva l'**aliquota applicata**: cambiare l'aliquota di un asset non modifica le vendite già registrate.
+
+## 2026-10-19 · Prezzi solo manuali (modifica SPEC 3.6 e 6.2)
+
+Nessun aggiornamento automatico dei prezzi (niente Edge Function né job per Yahoo Finance): i prezzi di chiusura si inseriscono solo a mano con "Aggiorna Prezzi".
+
 ## 2026-10-19 · Liquidità e spese condivise (da applicare al passo 6)
 
 La formula della SPEC sottrae dalla liquidità la quota personale e in più conta i debiti: per una spesa pagata da un'altra persona il patrimonio scenderebbe due volte.

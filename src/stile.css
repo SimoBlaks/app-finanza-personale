@@ -206,6 +206,15 @@ button:disabled { opacity: 0.6; cursor: default; }
 .stato-job { font-size: 0.88rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: var(--superficie); border: 1px solid var(--bordo); }
 .stato-job.errore { border-color: var(--pericolo); }
 
+/* Investimenti */
+.griglia-posizioni { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
+@media (min-width: 600px) { .griglia-posizioni { grid-template-columns: 1fr 1fr; } }
+.posizione { margin-bottom: 0; }
+.posizione-titolo { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem; }
+.dati { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1rem; margin: 0; font-size: 0.92rem; }
+.dati dt { color: var(--testo-tenue); }
+.dati dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
 /* Selettore categoria */
 .scelta-categoria { display: flex; flex-direction: column; gap: 0.4rem; }
 .elenco-categorie { max-height: 260px; overflow-y: auto; border: 1px solid var(--bordo); border-radius: 8px; padding: 0.25rem; }
