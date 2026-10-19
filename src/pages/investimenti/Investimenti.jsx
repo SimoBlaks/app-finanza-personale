@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, numero } from '../../lib/numeri'
+import { euro } from '../../lib/numeri'
 import { dataBreve } from '../../lib/date'
 import { fattore, mostraPrezzo, mostraQuantita } from '../../lib/investimenti'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
+import SchedaPosizione, { percento } from '../../components/SchedaPosizione'
 import ModuloOperazione from './ModuloOperazione'
 import AggiornaPrezzi from './AggiornaPrezzi'
 import StoricoPrezzi from './StoricoPrezzi'
 
-const percento = (n) => `${n > 0 ? '+' : ''}${numero(n.toFixed(2))}%`
-
 export default function Investimenti() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [asset, setAsset] = useState(null)
   const [posizioni, setPosizioni] = useState([])
   const [operazioni, setOperazioni] = useState([])
   const [ultimi, setUltimi] = useState({})
   const [impostazioni, setImpostazioni] = useState(null)
-  const [modulo, setModulo] = useState(null) // { tipo: 'acquisto' | 'vendita' | 'prezzi', operazione }
+  // dalla dashboard si può arrivare qui con la schermata prezzi già aperta
+  const [modulo, setModulo] = useState(location.state?.apri === 'prezzi' ? { tipo: 'prezzi' } : null) // { tipo: 'acquisto' | 'vendita' | 'prezzi' | 'storico', … }
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
@@ -44,7 +47,11 @@ export default function Investimenti() {
   const perId = Object.fromEntries(asset.map((a) => [a.id, a]))
   const possedute = posizioni.filter((p) => Number(p.quantita) > 0)
 
-  const chiudi = () => { setModulo(null); carica() }
+  const chiudi = () => {
+    if (location.state) navigate('.', { replace: true, state: null })
+    setModulo(null)
+    carica()
+  }
 
   if (modulo?.tipo === 'prezzi')
     return (
@@ -108,32 +115,11 @@ export default function Investimenti() {
       )}
       <div className="griglia-posizioni">
         {valutazioni.map(({ p, a, v }) => (
-          <div key={p.asset_id} className="scheda posizione">
-            <div className="posizione-titolo">
-              <strong>{a?.nome}</strong>
-              <span className="nota">{a?.ticker_isin}</span>
-            </div>
-            <dl className="dati">
-              <dt>{a?.quotazione === 'percentuale' ? 'Nominale' : 'Quantità'}</dt>
-              <dd>{a?.quotazione === 'percentuale' ? euro(p.quantita) : numero(p.quantita)}</dd>
-              <dt>PMC</dt>
-              <dd>{mostraPrezzo(a, p.pmc)}</dd>
-              <dt>Ultimo prezzo</dt>
-              <dd>
-                {v.senzaPrezzo ? '—' : mostraPrezzo(a, v.prezzo)}
-                {v.dataPrezzo && <span className="nota"> del {dataBreve(v.dataPrezzo)}</span>}
-              </dd>
-              <dt>Valore attuale</dt>
-              <dd>{euro(v.valore)}</dd>
-              <dt>Guadagno / perdita</dt>
-              <dd className={v.guadagno >= 0 ? 'ok' : 'perdita'}>{euro(v.guadagno)} ({percento(v.guadagnoPct)})</dd>
-            </dl>
-            {v.senzaPrezzo && <p className="etichetta-avviso">nessun prezzo disponibile: valore calcolato al PMC</p>}
-            {v.prezzoVecchio && <p className="etichetta-avviso">prezzo vecchio</p>}
+          <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v}>
             <div className="riga-azioni azioni-posizione">
               <button className="piccolo" onClick={() => setModulo({ tipo: 'storico', asset: a })}>Storico prezzi</button>
             </div>
-          </div>
+          </SchedaPosizione>
         ))}
       </div>
 

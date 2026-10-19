@@ -42,3 +42,8 @@ Regola adottata:
 - **Statistiche per categoria e tasso di risparmio**: usano la quota personale, come da SPEC.
 
 Così `Patrimonio = Liquidità + Investimenti + Crediti − Debiti` è corretto in tutti i casi.
+
+Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
+
+- la liquidità conta i movimenti **dalla data del saldo iniziale fino a oggi** (quelli precedenti sono già nel saldo iniziale, quelli futuri non sono ancora avvenuti); acquisti di asset: − (valore + spese), vendite: + liquidità incassata;
+- i saldi con le persone contano tutte le spese condivise e i rimborsi fino a oggi, a prescindere dalla data del saldo iniziale.

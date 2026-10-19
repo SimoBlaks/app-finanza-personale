@@ -19,8 +19,8 @@ export function inCentesimi(decimale) {
   return decimale.startsWith('-') ? -c : c
 }
 
-const formatoEuro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
-const formatoNumero = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 6 })
+const formatoEuro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', useGrouping: 'always' })
+const formatoNumero = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 6, useGrouping: 'always' })
 
 export const euro = (n) => formatoEuro.format(Number(n ?? 0))
 export const numero = (n) => formatoNumero.format(Number(n ?? 0))
