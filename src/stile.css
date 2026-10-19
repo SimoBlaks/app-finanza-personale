@@ -164,6 +164,55 @@ button:disabled { opacity: 0.6; cursor: default; }
 .riga-esposizione { display: grid; grid-template-columns: 1fr 6rem auto; gap: 0.4rem; align-items: center; }
 .riga-totale { display: flex; justify-content: space-between; align-items: center; }
 
+/* Transazioni */
+.etichetta-campo { display: block; font-size: 0.9rem; color: var(--testo-tenue); margin-bottom: 0.3rem; }
+.riquadro { border: 1px dashed var(--bordo); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.interruttore-tipo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.interruttore-tipo .selezionato.spesa { background: var(--pericolo); border-color: var(--pericolo); color: #fff; font-weight: 600; }
+.interruttore-tipo .selezionato.incasso { background: var(--successo); border-color: var(--successo); color: #fff; font-weight: 600; }
+.azioni-pagina { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.azioni-pagina .primario { flex: 1; }
+.selettore-mese { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; text-transform: capitalize; }
+.totali-mese { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem; }
+.totali-mese > div { background: var(--superficie); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 0.6rem 0.8rem; display: flex; flex-direction: column; }
+.totali-mese .nota { margin: 0; }
+.giorno h3 { font-size: 0.85rem; color: var(--testo-tenue); text-transform: capitalize; margin: 1rem 0 0.4rem; }
+.elenco-movimenti { padding: 0; overflow: hidden; }
+.movimento {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--bordo);
+  border-radius: 0;
+  padding: 0.7rem 0.9rem;
+  background: none;
+}
+.movimento:last-child { border-bottom: none; }
+.movimento.statico { cursor: default; }
+.movimento.rimborso { background: var(--sfondo); }
+.movimento-testo { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.movimento-testo .nota { margin: 0; }
+.movimento-importi { display: flex; flex-direction: column; align-items: flex-end; }
+.movimento-importi .nota { margin: 0; font-size: 0.78rem; }
+.importo { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; }
+.importo.spesa { color: var(--pericolo); }
+.importo.incasso { color: var(--successo); }
+.archiviata .movimento-testo strong { color: var(--testo-tenue); }
+
+/* Selettore categoria */
+.scelta-categoria { display: flex; flex-direction: column; gap: 0.4rem; }
+.elenco-categorie { max-height: 260px; overflow-y: auto; border: 1px solid var(--bordo); border-radius: 8px; padding: 0.25rem; }
+.voce-categoria { display: block; width: 100%; text-align: left; border: none; background: none; padding: 0.5rem 0.6rem; min-height: 40px; border-radius: 6px; }
+.voce-categoria:hover { background: var(--sfondo); }
+.voce-categoria-riga { display: flex; align-items: center; }
+.categoria-scelta { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.5rem 0.7rem; border: 1px solid var(--primario); border-radius: 8px; font-weight: 600; }
+.pulsanti-scelta { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.pulsanti-scelta .selezionato { background: var(--primario); color: var(--primario-testo); border-color: var(--primario); }
+
 /* Accesso */
 .accesso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
 .accesso-scheda { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 0.9rem; }
