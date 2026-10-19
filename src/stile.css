@@ -203,6 +203,9 @@ button:disabled { opacity: 0.6; cursor: default; }
 .importo.incasso { color: var(--successo); }
 .archiviata .movimento-testo strong { color: var(--testo-tenue); }
 
+.stato-job { font-size: 0.88rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: var(--superficie); border: 1px solid var(--bordo); }
+.stato-job.errore { border-color: var(--pericolo); }
+
 /* Selettore categoria */
 .scelta-categoria { display: flex; flex-direction: column; gap: 0.4rem; }
 .elenco-categorie { max-height: 260px; overflow-y: auto; border: 1px solid var(--bordo); border-radius: 8px; padding: 0.25rem; }

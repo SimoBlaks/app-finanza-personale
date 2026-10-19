@@ -5,18 +5,22 @@ import { percorso } from '../../lib/categorie'
 import { euro } from '../../lib/numeri'
 import { dataBreve, frequenze } from '../../lib/date'
 
+const dataOra = (ts) =>
+  new Date(ts).toLocaleString('it-IT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+
 export default function Ricorrenze({ albero, nomePersona }) {
   const [ricorrenze, setRicorrenze] = useState([])
+  const [ultimaEsecuzione, setUltimaEsecuzione] = useState(null)
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('transazioni_ricorrenti')
-      .select('*')
-      .order('attiva', { ascending: false })
-      .order('prossima_scadenza')
-    if (error) return setErrore(messaggioErrore(error))
-    setRicorrenze(data)
+    const [r, j] = await Promise.all([
+      supabase.from('transazioni_ricorrenti').select('*').order('attiva', { ascending: false }).order('prossima_scadenza'),
+      supabase.from('esecuzioni_job').select('*').eq('job', 'ricorrenze').order('eseguito_il', { ascending: false }).limit(1).maybeSingle(),
+    ])
+    if (r.error || j.error) return setErrore(messaggioErrore(r.error || j.error))
+    setRicorrenze(r.data)
+    setUltimaEsecuzione(j.data)
   }, [])
 
   useEffect(() => { carica() }, [carica])
@@ -31,8 +35,15 @@ export default function Ricorrenze({ albero, nomePersona }) {
   return (
     <div>
       <p className="nota">
-        Le transazioni ricorrenti vengono create in automatico alla scadenza (dal passo 4).
+        Le transazioni ricorrenti vengono create in automatico ogni mattina, con la data della scadenza.
         Disattivare o eliminare una ricorrenza non cancella le transazioni già create.
+      </p>
+      <p className={`stato-job ${ultimaEsecuzione?.esito === 'errore' ? 'errore' : ''}`}>
+        {!ultimaEsecuzione
+          ? 'Il job automatico non è ancora stato eseguito.'
+          : ultimaEsecuzione.esito === 'ok'
+            ? `Ultima esecuzione: ${dataOra(ultimaEsecuzione.eseguito_il)} · ${ultimaEsecuzione.transazioni_create} transazioni create`
+            : `Ultima esecuzione: ${dataOra(ultimaEsecuzione.eseguito_il)} · errore: ${ultimaEsecuzione.messaggio}`}
       </p>
       {errore && <p className="errore">{errore}</p>}
       {!ricorrenze.length && <p className="nota">Nessuna ricorrenza. Creane una con "Rendi ricorrente" in una nuova transazione.</p>}
