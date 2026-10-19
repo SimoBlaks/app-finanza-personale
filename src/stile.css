@@ -214,6 +214,19 @@ button:disabled { opacity: 0.6; cursor: default; }
 .dati { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1rem; margin: 0; font-size: 0.92rem; }
 .dati dt { color: var(--testo-tenue); }
 .dati dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.dati dd.ok { color: var(--successo); }
+.dati dd.perdita { color: var(--pericolo); font-weight: 600; }
+.etichetta-avviso {
+  display: inline-block;
+  margin: 0.6rem 0 0;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--attenzione);
+  border: 1px solid var(--attenzione);
+}
+.riga-prezzo { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem 0; border-bottom: 1px solid var(--bordo); }
+.riga-prezzo:last-of-type { border-bottom: none; }
 
 /* Selettore categoria */
 .scelta-categoria { display: flex; flex-direction: column; gap: 0.4rem; }

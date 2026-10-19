@@ -11,8 +11,6 @@ const vuoto = {
   nome: '',
   tipologia: 'etf',
   aliquota_tassa: '26',
-  aggiornamento_automatico: false,
-  simbolo_fonte: '',
   righe: [{ paese: '', percentuale: '' }],
 }
 
@@ -51,7 +49,6 @@ function ModuloAsset({ iniziale, onFine }) {
     e.preventDefault()
     setErrore('')
     if (!f.ticker_isin.trim() || !f.nome.trim()) return setErrore('Ticker/ISIN e nome sono obbligatori.')
-    if (f.aggiornamento_automatico && !f.simbolo_fonte.trim()) return setErrore('Con l\'aggiornamento automatico serve il simbolo della fonte.')
     if (esposizione.errore) return setErrore(esposizione.errore)
 
     const dati = {
@@ -60,8 +57,9 @@ function ModuloAsset({ iniziale, onFine }) {
       tipologia: f.tipologia,
       quotazione,
       aliquota_tassa: f.aliquota_tassa,
-      aggiornamento_automatico: f.aggiornamento_automatico,
-      simbolo_fonte: f.aggiornamento_automatico ? f.simbolo_fonte.trim() : null,
+      // prezzi solo manuali (vedi DECISIONI.md)
+      aggiornamento_automatico: false,
+      simbolo_fonte: null,
     }
     setInvio(true)
     const risposta = f.id
@@ -110,14 +108,6 @@ function ModuloAsset({ iniziale, onFine }) {
         Quotazione: <strong>{quotazione === 'percentuale' ? 'in % del nominale' : 'prezzo unitario'}</strong>
         {quotazione === 'percentuale' && ' (la quantità sarà il valore nominale in euro)'}
       </p>
-
-      <label className="interruttore">
-        <input type="checkbox" checked={f.aggiornamento_automatico} onChange={(e) => imposta('aggiornamento_automatico', e.target.checked)} />
-        Aggiornamento automatico del prezzo
-      </label>
-      {f.aggiornamento_automatico && (
-        <label>Simbolo nella fonte dati (es. VWCE.DE)<input value={f.simbolo_fonte} onChange={(e) => imposta('simbolo_fonte', e.target.value)} /></label>
-      )}
 
       <h3>Esposizione geografica</h3>
       {f.righe.map((r, i) => (
@@ -172,8 +162,6 @@ export default function Asset() {
       nome: a.nome,
       tipologia: a.tipologia,
       aliquota_tassa: String(Number(a.aliquota_tassa)),
-      aggiornamento_automatico: a.aggiornamento_automatico,
-      simbolo_fonte: a.simbolo_fonte ?? '',
       righe: a.asset_esposizione_geografica.length
         ? a.asset_esposizione_geografica.map((r) => ({ paese: r.paese, percentuale: perCampo(r.percentuale) }))
         : [{ paese: '', percentuale: '' }],
@@ -197,9 +185,7 @@ export default function Asset() {
             <strong>{a.nome}</strong> <span className="nota">{a.ticker_isin}</span>
             {!a.attivo && <span className="etichetta">archiviato</span>}
             <div className="nota">
-              {tipologie[a.tipologia]} · tasse {numero(a.aliquota_tassa)}%
-              {a.aggiornamento_automatico && ` · prezzo automatico (${a.simbolo_fonte})`}
-            </div>
+              {tipologie[a.tipologia]} · tasse {numero(a.aliquota_tassa)}%            </div>
             <div className="nota">
               {a.asset_esposizione_geografica.length
                 ? a.asset_esposizione_geografica.map((r) => `${r.paese} ${numero(r.percentuale)}%`).join(', ')
