@@ -99,6 +99,7 @@ export default function Investimenti() {
           operazione={modulo.operazione}
           asset={asset}
           posizioni={posizioni}
+          operazioni={operazioni}
           onFine={chiudi}
         />
       </section>

@@ -3,11 +3,11 @@ import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
 import { euro, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
-import { etichettaPrezzo, etichettaQuantita, fattore, mostraPrezzo } from '../../lib/investimenti'
+import { etichettaPrezzo, etichettaQuantita, fattore, mostraPrezzo, posizioneAl } from '../../lib/investimenti'
 
 // Acquisto o vendita. I valori definitivi della vendita (plusvalore, tasse,
 // liquidità) li calcola il database al salvataggio; qui c'è solo un'anteprima.
-export default function ModuloOperazione({ tipo, operazione, asset, posizioni, onFine }) {
+export default function ModuloOperazione({ tipo, operazione, asset, posizioni, operazioni, onFine }) {
   const [f, setF] = useState({
     data: operazione?.data ?? oggiISO(),
     asset_id: operazione?.asset_id ?? '',
@@ -43,7 +43,8 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
     if (!vendita) {
       anteprima = <p className="nota">Costo totale: <strong>{euro(lordo + Number(s))}</strong></p>
     } else {
-      const pmc = Number(posizione(scelto.id)?.pmc ?? 0)
+      // PMC alla data della vendita (non quello di oggi: l'asset potrebbe essere già tutto venduto)
+      const pmc = posizioneAl(operazioni, scelto, f.data || oggiISO(), operazione).pmc
       const carico = Number(q) * pmc * fattore(scelto)
       const plus = lordo - carico - Number(s)
       const tasse = Math.max(plus, 0) * (Number(operazione?.aliquota_applicata ?? scelto.aliquota_tassa) / 100)
@@ -109,7 +110,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
       </div>
       {!asset.length && <p className="nota">Aggiungi prima gli asset in Impostazioni → Asset.</p>}
       {anteprima}
-      {vendita && anteprima && <p className="nota">Anteprima con il PMC di oggi: i valori definitivi li calcola il database al salvataggio.</p>}
+      {vendita && anteprima && <p className="nota">Anteprima con il PMC alla data della vendita: i valori definitivi li calcola il database al salvataggio.</p>}
 
       {errore && <p className="errore">{errore}</p>}
       <div className="azioni-modulo">
