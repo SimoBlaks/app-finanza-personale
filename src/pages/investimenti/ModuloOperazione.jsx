@@ -14,6 +14,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
     quantita: operazione ? perCampo(operazione.quantita) : '',
     prezzo: operazione ? perCampo(operazione.prezzo) : '',
     spese: operazione ? perCampo(operazione.spese) : '',
+    movimenta_liquidita: operazione ? operazione.movimenta_liquidita !== false : true,
   })
   const [errore, setErrore] = useState('')
   const [invio, setInvio] = useState(false)
@@ -41,7 +42,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
   let anteprima = null
   if (scelto && lordo !== null) {
     if (!vendita) {
-      anteprima = <p className="nota">Costo totale: <strong>{euro(lordo + Number(s))}</strong></p>
+      anteprima = <p className="nota">Costo totale: <strong>{euro(lordo + Number(s))}</strong>{!f.movimenta_liquidita && ' (non tolto dalla liquidità)'}</p>
     } else {
       // PMC alla data della vendita (non quello di oggi: l'asset potrebbe essere già tutto venduto)
       const pmc = posizioneAl(operazioni, scelto, f.data || oggiISO(), operazione).pmc
@@ -54,7 +55,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
           <dt>Valore di carico (PMC {mostraPrezzo(scelto, pmc)})</dt><dd>{euro(carico)}</dd>
           <dt>{plus >= 0 ? 'Plusvalore' : 'Minusvalenza'}</dt><dd>{euro(plus)}</dd>
           <dt>Tasse ({numero(operazione?.aliquota_applicata ?? scelto.aliquota_tassa)}%)</dt><dd>{euro(tasse)}</dd>
-          <dt>Liquidità incassata</dt><dd><strong>{euro(lordo - Number(s) - tasse)}</strong></dd>
+          <dt>{f.movimenta_liquidita ? 'Liquidità incassata' : 'Netto (non entra nella liquidità)'}</dt><dd><strong>{euro(lordo - Number(s) - tasse)}</strong></dd>
         </dl>
       )
     }
@@ -71,7 +72,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
     if (vendita && Number(q) > disponibile(f.asset_id))
       return setErrore(`Puoi vendere al massimo ${numero(disponibile(f.asset_id))}.`)
 
-    const dati = { data: f.data, tipo, asset_id: f.asset_id, quantita: q, prezzo: p, spese: s }
+    const dati = { data: f.data, tipo, asset_id: f.asset_id, quantita: q, prezzo: p, spese: s, movimenta_liquidita: f.movimenta_liquidita }
     setInvio(true)
     const { error } = operazione
       ? await supabase.from('operazioni_investimento').update(dati).eq('id', operazione.id)
@@ -108,6 +109,16 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
         <label>{etichettaPrezzo(scelto)}<input inputMode="decimal" value={f.prezzo} onChange={(e) => imposta('prezzo', e.target.value)} /></label>
         <label>Spese dell'operazione (€, facoltative)<input inputMode="decimal" value={f.spese} onChange={(e) => imposta('spese', e.target.value)} /></label>
       </div>
+      <label className="interruttore-cifre">
+        <input type="checkbox" role="switch" checked={f.movimenta_liquidita} onChange={(e) => imposta('movimenta_liquidita', e.target.checked)} />
+        <span className="levetta" aria-hidden="true" />
+        <span>{vendita ? 'Incassato nella liquidità' : 'Pagato dalla liquidità'}</span>
+      </label>
+      <p className="nota">
+        {vendita
+          ? 'Togli la spunta se i soldi non arrivano sul conto ma vanno direttamente in un altro fondo (es. trasferimento tra fondi pensione).'
+          : 'Togli la spunta per i versamenti che non escono dal tuo conto: TFR o contributi versati dal datore di lavoro, trasferimenti da un altro fondo.'}
+      </p>
       {!asset.length && <p className="nota">Aggiungi prima gli asset in Impostazioni → Asset.</p>}
       {anteprima}
       {vendita && anteprima && <p className="nota">Anteprima con il PMC alla data della vendita: i valori definitivi li calcola il database al salvataggio.</p>}

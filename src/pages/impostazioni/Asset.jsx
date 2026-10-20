@@ -4,7 +4,7 @@ import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
 import { inCentesimi, leggiNumero, numero, perCampo } from '../../lib/numeri'
 
-const tipologie = { azione: 'Azione', etf: 'ETF', obbligazione: 'Obbligazione' }
+const tipologie = { azione: 'Azione', etf: 'ETF', obbligazione: 'Obbligazione', fondo: 'Fondo' }
 
 const vuoto = {
   id: null,
@@ -12,6 +12,7 @@ const vuoto = {
   nome: '',
   tipologia: 'etf',
   aliquota_tassa: '26',
+  escluso_dal_patrimonio: false,
   righe: [{ paese: '', percentuale: '' }],
 }
 
@@ -60,6 +61,7 @@ function ModuloAsset({ iniziale, onFine }) {
       tipologia: f.tipologia,
       quotazione,
       aliquota_tassa: f.aliquota_tassa,
+      escluso_dal_patrimonio: f.escluso_dal_patrimonio,
       // prezzi solo manuali (vedi DECISIONI.md)
       aggiornamento_automatico: false,
       simbolo_fonte: null,
@@ -110,6 +112,15 @@ function ModuloAsset({ iniziale, onFine }) {
       <p className="nota">
         Quotazione: <strong>{quotazione === 'percentuale' ? 'in % del nominale' : 'prezzo unitario'}</strong>
         {quotazione === 'percentuale' && ' (la quantità sarà il valore nominale in euro)'}
+      </p>
+      <label className="interruttore-cifre">
+        <input type="checkbox" role="switch" checked={f.escluso_dal_patrimonio} onChange={(e) => imposta('escluso_dal_patrimonio', e.target.checked)} />
+        <span className="levetta" aria-hidden="true" />
+        <span>Escludi dal patrimonio</span>
+      </label>
+      <p className="nota">
+        Per soldi vincolati che non vuoi contare nel patrimonio (es. fondo pensione): l'asset resta visibile
+        in Investimenti, ma non entra nei totali di patrimonio, investimenti ed esposizione geografica.
       </p>
 
       <h3>Esposizione geografica <span className="nota">(facoltativa)</span></h3>
@@ -179,6 +190,7 @@ export default function Asset() {
       nome: a.nome,
       tipologia: a.tipologia,
       aliquota_tassa: String(Number(a.aliquota_tassa)),
+      escluso_dal_patrimonio: a.escluso_dal_patrimonio,
       righe: a.asset_esposizione_geografica.length
         ? a.asset_esposizione_geografica.map((r) => ({ paese: r.paese, percentuale: perCampo(r.percentuale) }))
         : [{ paese: '', percentuale: '' }],
@@ -201,6 +213,7 @@ export default function Asset() {
           <div>
             <strong>{a.nome}</strong> <span className="nota">{a.ticker_isin}</span>
             {!a.attivo && <span className="etichetta">archiviato</span>}
+            {a.escluso_dal_patrimonio && <span className="etichetta">escluso dal patrimonio</span>}
             <div className="nota">
               {tipologie[a.tipologia]} · tasse {numero(a.aliquota_tassa)}%            </div>
             <div className="nota">

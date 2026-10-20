@@ -182,8 +182,8 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
 
   // Investimenti: acquisti, vendite, dividendi e cedole (in ordine di data)
   const fi = wb.addWorksheet('Investimenti')
-  intestazione(fi, ['Data', 'Tipo', 'Asset', 'Ticker / ISIN', 'Quantità', 'Prezzo', 'Spese', 'Plusvalore', 'Tasse', 'Liquidità incassata', 'Provento lordo'],
-    [12, 11, 28, 16, 13, 13, 11, 13, 11, 18, 15])
+  intestazione(fi, ['Data', 'Tipo', 'Asset', 'Ticker / ISIN', 'Quantità', 'Prezzo', 'Spese', 'Plusvalore', 'Tasse', 'Liquidità incassata', 'Provento lordo', 'Movimenta la liquidità'],
+    [12, 11, 28, 16, 13, 13, 11, 13, 11, 18, 15, 12])
   const righeInvestimenti = [
     ...operazioni.map((o) => ({ ...o, genere: 'operazione' })),
     ...proventi.map((o) => ({ ...o, genere: 'provento' })),
@@ -193,7 +193,7 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
     if (o.genere === 'provento') {
       const riga = fi.addRow([
         comeData(o.data), o.tipo === 'cedola' ? 'Cedola' : 'Dividendo', x?.nome ?? '?', x?.ticker_isin ?? '',
-        null, null, null, null, euro2(o.tasse), euro2(o.importo_netto), euro2(o.importo_lordo),
+        null, null, null, null, euro2(o.tasse), euro2(o.importo_netto), euro2(o.importo_lordo), 'sì',
       ])
       riga.getCell(1).numFmt = FORMATO_DATA
       for (const c of [9, 10, 11]) riga.getCell(c).numFmt = FORMATO_EURO
@@ -204,6 +204,7 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
       Number(o.quantita), Number(o.prezzo), euro2(o.spese),
       o.plusvalore === null ? null : euro2(o.plusvalore), o.tasse === null ? null : euro2(o.tasse),
       o.liquidita_incassata === null ? null : euro2(o.liquidita_incassata),
+      null, o.movimenta_liquidita === false ? 'no' : 'sì',
     ])
     riga.getCell(1).numFmt = FORMATO_DATA
     riga.getCell(5).numFmt = '#,##0.######'

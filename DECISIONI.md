@@ -83,3 +83,10 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Tabella `rettifiche_liquidita` (data, importo con segno, nota): allinea la liquidità dell'app al saldo reale dei conti quando c'è una differenza che non si riesce a ricostruire.
 - Si registra da Impostazioni › Saldo e soglie: si scrive il saldo reale di oggi e l'app registra la differenza con la data di oggi.
 - Conta nella liquidità (viste `liquidita` e `riepilogo_mensile`) e quindi nel patrimonio, ma non è né una spesa né un'entrata: statistiche e tasso di risparmio non cambiano. Nell'export compare nel foglio "Rettifiche".
+
+## 2026-10-20 · Fondi pensione e asset esclusi dal patrimonio
+
+- Ogni acquisto o vendita di un investimento ha l'interruttore **"Pagato dalla liquidità" / "Incassato nella liquidità"** (campo `movimenta_liquidita`, attivo di default). Spento, l'operazione cambia la posizione (quote, PMC) ma non tocca la liquidità e non è né spesa né entrata: serve per il TFR o i contributi versati dal datore di lavoro e per i trasferimenti tra fondi.
+- Ogni asset ha l'interruttore **"Escludi dal patrimonio"** (campo `escluso_dal_patrimonio`): l'asset resta visibile in Investimenti e in dashboard con l'etichetta "escluso dal patrimonio", ma non entra nei totali di patrimonio, investimenti ed esposizione geografica.
+- Nell'export il foglio "Investimenti" ha la colonna "Movimenta la liquidità".
+- Tra le tipologie di asset c'è anche **"Fondo"** (es. fondo pensione), quotato a prezzo unitario come azioni ed ETF.

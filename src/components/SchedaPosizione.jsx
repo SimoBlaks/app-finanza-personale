@@ -18,6 +18,7 @@ export default function SchedaPosizione({ asset: a, posizione: p, valutazione: v
       <div className="posizione-titolo">
         <strong>{a?.nome}</strong>
         <span className="nota">{a?.ticker_isin}</span>
+        {a?.escluso_dal_patrimonio && <span className="etichetta">escluso dal patrimonio</span>}
       </div>
       <dl className="dati">
         <dt>{a?.quotazione === 'percentuale' ? 'Nominale' : 'Quantità'}</dt>

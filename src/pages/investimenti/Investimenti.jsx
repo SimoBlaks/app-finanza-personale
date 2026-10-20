@@ -72,7 +72,9 @@ export default function Investimenti() {
     )
 
   const valutazioni = possedute.map((p) => ({ p, a: perId[p.asset_id], v: valuta(perId[p.asset_id], p, ultimi[p.asset_id], impostazioni) }))
-  const totale = valutazioni.reduce(
+  const esclusi = valutazioni.filter(({ a }) => a?.escluso_dal_patrimonio).length
+  // i totali non contano gli asset esclusi dal patrimonio (es. fondo pensione)
+  const totale = valutazioni.filter(({ a }) => !a?.escluso_dal_patrimonio).reduce(
     (t, { p, v }) => ({ valore: t.valore + v.valore, costo: t.costo + Number(p.costo_carico) }),
     { valore: 0, costo: 0 },
   )
@@ -133,6 +135,7 @@ export default function Investimenti() {
           </div>
         </div>
       )}
+      {esclusi > 0 && <p className="nota">I totali non comprendono gli asset esclusi dal patrimonio.</p>}
       <div className="griglia-posizioni">
         {valutazioni.map(({ p, a, v }) => (
           <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v} proventi={proventiPerAsset[p.asset_id]}>
@@ -169,6 +172,7 @@ export default function Investimenti() {
                   <span className="nota">
                     {dataBreve(o.data)} · {mostraQuantita(a, o.quantita)} a {mostraPrezzo(a, o.prezzo)}
                     {Number(o.spese) > 0 && ` · spese ${euro(o.spese)}`}
+                    {o.movimenta_liquidita === false && " · fuori liquidità"}
                   </span>
                   {o.tipo === 'vendita' && (
                     <span className="nota">
@@ -176,8 +180,10 @@ export default function Investimenti() {
                     </span>
                   )}
                 </span>
-                <span className={`importo ${o.tipo === 'acquisto' ? 'spesa' : 'incasso'}`}>
-                  {o.tipo === 'acquisto' ? `−${euro(lordo + Number(o.spese))}` : `+${euro(o.liquidita_incassata)}`}
+                <span className={`importo ${o.movimenta_liquidita === false ? '' : o.tipo === 'acquisto' ? 'spesa' : 'incasso'}`}>
+                  {o.movimenta_liquidita === false
+                    ? euro(o.tipo === 'acquisto' ? lordo + Number(o.spese) : o.liquidita_incassata)
+                    : o.tipo === 'acquisto' ? `−${euro(lordo + Number(o.spese))}` : `+${euro(o.liquidita_incassata)}`}
                 </span>
               </button>
             )

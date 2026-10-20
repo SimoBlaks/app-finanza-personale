@@ -91,7 +91,9 @@ export default function Dashboard() {
   const valutazioni = d.posizioni
     .filter((p) => Number(p.quantita) > 0)
     .map((p) => ({ p, a: perId[p.asset_id], v: valuta(perId[p.asset_id], p, d.ultimi[p.asset_id], d.impostazioni) }))
-  const investimenti = valutazioni.reduce((t, { v }) => t + v.valore, 0)
+  // gli asset esclusi dal patrimonio (es. fondo pensione) restano visibili ma non entrano nei totali
+  const nelPatrimonio = valutazioni.filter(({ a }) => !a?.escluso_dal_patrimonio)
+  const investimenti = nelPatrimonio.reduce((t, { v }) => t + v.valore, 0)
   const crediti = d.saldi.reduce((t, s) => t + Math.max(Number(s.saldo), 0), 0)
   const debiti = d.saldi.reduce((t, s) => t + Math.max(-Number(s.saldo), 0), 0)
   const liquidita = d.liquidita ? Number(d.liquidita.liquidita) : null
@@ -112,7 +114,7 @@ export default function Dashboard() {
     voce.valore += valore
     perPaese.set(chiave, voce)
   }
-  for (const { a, v } of valutazioni) {
+  for (const { a, v } of nelPatrimonio) {
     const righe = a?.asset_esposizione_geografica ?? []
     if (!righe.length) aggiungi('Non specificato', v.valore)
     for (const r of righe) aggiungi(r.paese, (v.valore * Number(r.percentuale)) / 100)
