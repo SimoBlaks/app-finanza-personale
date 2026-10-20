@@ -70,3 +70,10 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Non toccano il PMC. Nella scheda di una posizione compaiono il totale netto incassato e il "guadagno con proventi".
 - Nell'export Excel stanno nel foglio "Investimenti", con la colonna "Provento lordo".
 - Le cedole passate del file Excel non vengono importate.
+
+## 2026-10-20 · Importazione dal file Excel (01/07/2026 → 30/10/2026)
+
+- Importati 115 movimenti dal foglio 2026 del file "Entrate_Uscite" aggiornato, con le stesse regole dello storico: spese divise inserite con la sola quota personale e il totale nella nota (una spesa divisa per 2,5: quota 40%).
+- Esclusi gli interessi del conto (macrocategoria "Investimenti" del file), come per lo storico.
+- Create le microcategorie mancanti "Dentista" (Spese mediche › Visite mediche) e "Provvigioni" (sotto Lavoro).
+- Una riga con formula rotta nel file è stata inserita con l'importo confermato a voce; due righe con data futura entrano nella liquidità solo alla loro data.
