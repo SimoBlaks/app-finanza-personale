@@ -72,7 +72,8 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
     if (vendita && Number(q) > disponibile(f.asset_id))
       return setErrore(`Puoi vendere al massimo ${numero(disponibile(f.asset_id))}.`)
 
-    const dati = { data: f.data, tipo, asset_id: f.asset_id, quantita: q, prezzo: p, spese: s, movimenta_liquidita: f.movimenta_liquidita }
+    // salvando, un acquisto creato da un piano di accumulo smette di essere "da verificare"
+    const dati = { data: f.data, tipo, asset_id: f.asset_id, quantita: q, prezzo: p, spese: s, movimenta_liquidita: f.movimenta_liquidita, da_verificare: false }
     setInvio(true)
     const { error } = operazione
       ? await supabase.from('operazioni_investimento').update(dati).eq('id', operazione.id)
@@ -92,6 +93,12 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
   return (
     <form className="scheda modulo" onSubmit={salva}>
       <h2>{operazione ? `Modifica ${vendita ? 'vendita' : 'acquisto'}` : vendita ? 'Vendita' : 'Nuovo acquisto'}</h2>
+      {operazione?.da_verificare && (
+        <p className="avviso">
+          Acquisto creato in automatico da un piano di accumulo con un prezzo stimato: correggi quantità e prezzo con i dati reali del broker e salva.
+          Salvando, l'etichetta "da verificare" sparisce.
+        </p>
+      )}
       <div className="griglia">
         <label>
           Asset

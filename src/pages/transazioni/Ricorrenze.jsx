@@ -44,7 +44,7 @@ export default function Ricorrenze({ albero, nomePersona }) {
         {!ultimaEsecuzione
           ? 'Il job automatico non è ancora stato eseguito.'
           : ultimaEsecuzione.esito === 'ok'
-            ? `Ultima esecuzione: ${dataOra(ultimaEsecuzione.eseguito_il)} · ${ultimaEsecuzione.transazioni_create} transazioni create`
+            ? `Ultima esecuzione: ${dataOra(ultimaEsecuzione.eseguito_il)} · ${ultimaEsecuzione.transazioni_create} transazioni create${ultimaEsecuzione.operazioni_create ? ` · ${ultimaEsecuzione.operazioni_create} acquisti dei piani di accumulo` : ''}`
             : `Ultima esecuzione: ${dataOra(ultimaEsecuzione.eseguito_il)} · errore: ${ultimaEsecuzione.messaggio}`}
       </p>
       {errore && <p className="errore">{errore}</p>}

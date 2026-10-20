@@ -90,3 +90,10 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Ogni asset ha l'interruttore **"Escludi dal patrimonio"** (campo `escluso_dal_patrimonio`): l'asset resta visibile in Investimenti e in dashboard con l'etichetta "escluso dal patrimonio", ma non entra nei totali di patrimonio, investimenti ed esposizione geografica.
 - Nell'export il foglio "Investimenti" ha la colonna "Movimenta la liquidità".
 - Tra le tipologie di asset c'è anche **"Fondo"** (es. fondo pensione), quotato a prezzo unitario come azioni ed ETF.
+
+## 2026-10-20 · Piani di accumulo (PAC) ricorrenti
+
+- In Investimenti › Piani di accumulo: nome, frequenza (come le ricorrenze), prossima scadenza, fine facoltativa, interruttore "Pagato dalla liquidità" (spento per il TFR) e una o più righe con asset, **importo fisso** o **quantità fissa**, prezzo di riferimento e spese.
+- Il job notturno delle ricorrenze crea a ogni scadenza un acquisto per riga (tabelle `piani_accumulo` e `piani_accumulo_righe`; sulle operazioni `piano_id` e `da_verificare`). Il prezzo è **stimato**: ultimo prezzo inserito fino a quella data, altrimenti PMC, altrimenti prezzo di riferimento della riga. Con l'importo fisso la quantità è importo ÷ prezzo stimato.
+- Gli acquisti generati sono segnati **"da verificare"**: l'app lo segnala in Investimenti; aprendo l'acquisto e salvandolo con i dati reali del broker l'etichetta sparisce.
+- Scadenze passate al momento della creazione vengono recuperate la notte successiva; riattivando un piano sospeso si riparte invece dalla prima scadenza da oggi in poi. Eliminare un piano non cancella gli acquisti già creati.

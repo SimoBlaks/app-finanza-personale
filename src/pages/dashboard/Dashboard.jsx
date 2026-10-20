@@ -233,7 +233,7 @@ export default function Dashboard() {
         {!d.job
           ? 'Il job delle ricorrenze non è ancora stato eseguito.'
           : d.job.esito === 'ok'
-            ? `Ricorrenze: ultima esecuzione ${dataOra(d.job.eseguito_il)} · ${numero(d.job.transazioni_create)} transazioni create`
+            ? `Ricorrenze: ultima esecuzione ${dataOra(d.job.eseguito_il)} · ${numero(d.job.transazioni_create)} transazioni create${d.job.operazioni_create ? ` · ${numero(d.job.operazioni_create)} acquisti dei piani` : ''}`
             : `Ricorrenze: ultima esecuzione ${dataOra(d.job.eseguito_il)} · errore: ${d.job.messaggio}`}
       </p>
     </section>

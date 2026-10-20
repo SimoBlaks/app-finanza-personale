@@ -514,3 +514,7 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
 .interruttore-vista.sezione-tipo button { font-size: 1rem; padding: 0.25rem 1rem; min-height: 36px; }
 .scelta-tema { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .scelta-tema .etichetta-campo { margin: 0; }
+/* Piani di accumulo */
+.etichetta.attenzione { background: color-mix(in srgb, var(--attenzione) 18%, transparent); color: var(--attenzione); font-weight: 600; }
+.riga-piano { border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 0.75rem; margin-bottom: 0.75rem; }
+.riga-piano > .piccolo { margin-top: 0.5rem; }

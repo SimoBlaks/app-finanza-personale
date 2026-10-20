@@ -9,6 +9,7 @@ import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi
 import SchedaPosizione, { percento, sommaProventi } from '../../components/SchedaPosizione'
 import ModuloOperazione from './ModuloOperazione'
 import ModuloProvento from './ModuloProvento'
+import { ElencoPiani, ModuloPiano } from './PianiAccumulo'
 import AggiornaPrezzi from './AggiornaPrezzi'
 import StoricoPrezzi from './StoricoPrezzi'
 
@@ -19,6 +20,8 @@ export default function Investimenti() {
   const [posizioni, setPosizioni] = useState([])
   const [operazioni, setOperazioni] = useState([])
   const [proventi, setProventi] = useState([])
+  const [piani, setPiani] = useState([])
+  const [righePiani, setRighePiani] = useState([])
   const [ultimi, setUltimi] = useState({})
   const [impostazioni, setImpostazioni] = useState(null)
   // dalla dashboard si può arrivare qui con la schermata prezzi già aperta
@@ -26,20 +29,24 @@ export default function Investimenti() {
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
-    const [a, p, o, u, i, pv] = await Promise.all([
+    const [a, p, o, u, i, pv, pa, pr] = await Promise.all([
       supabase.from('asset').select('*').order('nome'),
       supabase.from('posizioni').select('*'),
       supabase.from('operazioni_investimento').select('*').order('data', { ascending: false }).order('created_at', { ascending: false }),
       caricaUltimiPrezzi(),
       caricaImpostazioni(),
       supabase.from('proventi_investimento').select('*').order('data', { ascending: false }).order('created_at', { ascending: false }),
+      supabase.from('piani_accumulo').select('*').order('attivo', { ascending: false }).order('nome'),
+      supabase.from('piani_accumulo_righe').select('*').order('created_at'),
     ])
-    const err = a.error || p.error || o.error || u.error || i.error || pv.error
+    const err = a.error || p.error || o.error || u.error || i.error || pv.error || pa.error || pr.error
     if (err) return setErrore(messaggioErrore(err))
     setAsset(a.data)
     setPosizioni(p.data)
     setOperazioni(o.data)
     setProventi(pv.data)
+    setPiani(pa.data)
+    setRighePiani(pr.data)
     setUltimi(u.ultimi)
     setImpostazioni(i.impostazioni)
   }, [])
@@ -64,6 +71,20 @@ export default function Investimenti() {
       </section>
     )
 
+  if (modulo?.tipo === 'piano')
+    return (
+      <section>
+        <ModuloPiano
+          piano={modulo.piano}
+          righe={modulo.piano ? righePiani.filter((r) => r.piano_id === modulo.piano.id) : null}
+          asset={asset}
+          ultimi={ultimi}
+          posizioni={posizioni}
+          onFine={chiudi}
+        />
+      </section>
+    )
+
   if (modulo?.tipo === 'storico')
     return (
       <section>
@@ -80,6 +101,7 @@ export default function Investimenti() {
   )
 
   const proventiPerAsset = sommaProventi(proventi)
+  const daVerificare = operazioni.filter((o) => o.da_verificare).length
   // operazioni e proventi insieme, dal più recente
   const cronologia = [
     ...operazioni.map((o) => ({ ...o, genere: 'operazione' })),
@@ -116,6 +138,11 @@ export default function Investimenti() {
         <button onClick={() => setModulo({ tipo: 'provento', provento: null })} disabled={!asset.length}>Dividendo / cedola</button>
       </div>
       {!asset.length && <p className="nota">Aggiungi prima gli asset in Impostazioni → Asset.</p>}
+      {daVerificare > 0 && (
+        <p className="avviso">
+          {daVerificare === 1 ? "C'è 1 acquisto" : `Ci sono ${daVerificare} acquisti`} dei piani di accumulo da verificare: aprili nella cronologia e correggi quantità e prezzo con i dati reali.
+        </p>
+      )}
       {errore && <p className="errore">{errore}</p>}
 
       <div className="intestazione-scheda">
@@ -146,6 +173,8 @@ export default function Investimenti() {
         ))}
       </div>
 
+      <ElencoPiani piani={piani} righe={righePiani} asset={asset} onApri={(piano) => setModulo({ tipo: 'piano', piano })} onCambia={carica} />
+
       <h2>Cronologia operazioni</h2>
       {!cronologia.length && <p className="nota">Nessuna operazione registrata.</p>}
       {cronologia.length > 0 && (
@@ -173,6 +202,7 @@ export default function Investimenti() {
                     {dataBreve(o.data)} · {mostraQuantita(a, o.quantita)} a {mostraPrezzo(a, o.prezzo)}
                     {Number(o.spese) > 0 && ` · spese ${euro(o.spese)}`}
                     {o.movimenta_liquidita === false && " · fuori liquidità"}
+                    {o.da_verificare && <span className="etichetta attenzione">da verificare</span>}
                   </span>
                   {o.tipo === 'vendita' && (
                     <span className="nota">
