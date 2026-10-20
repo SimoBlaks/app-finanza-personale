@@ -34,6 +34,8 @@ export default function Ciambella({ voci, formatta, titoloCentro = 'Totale', onS
   const percento = (q) => `${(q * 100).toLocaleString('it-IT', { maximumFractionDigits: 1 })}%`
 
   return (
+    // il contenitore misura lo spazio disponibile: legenda accanto solo se ci sta
+    <div className="ciambella-spazio">
     <div className="ciambella">
       <svg viewBox="0 0 200 200" role="img" aria-label={`${titoloCentro}: ${formatta(totale)}`}>
         <circle cx="100" cy="100" r={R} fill="none" stroke="var(--traccia)" strokeWidth={SPESSORE} />
@@ -93,6 +95,7 @@ export default function Ciambella({ voci, formatta, titoloCentro = 'Totale', onS
           )
         })}
       </ul>
+    </div>
     </div>
   )
 }

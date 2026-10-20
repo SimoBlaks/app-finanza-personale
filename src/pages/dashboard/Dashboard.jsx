@@ -102,15 +102,26 @@ export default function Dashboard() {
   const variazione = ultimi13.length > 1 ? ultimi13[ultimi13.length - 1].valore - ultimi13[0].valore : null
 
   // Esposizione geografica ponderata sul valore attuale (SPEC 3.7).
-  const perPaese = new Map()
+  // Lo stesso paese si somma tra asset diversi anche se scritto con maiuscole o spazi diversi;
+  // le voci "Altri paesi" degli asset finiscono insieme ai paesi minori del grafico.
+  const ALTRI = 'altri paesi'
+  const perPaese = new Map() // chiave normalizzata → { nome, valore }
+  const aggiungi = (nome, valore) => {
+    const chiave = nome.trim().toLowerCase().replace(/\s+/g, ' ')
+    const voce = perPaese.get(chiave) ?? { nome: nome.trim(), valore: 0 }
+    voce.valore += valore
+    perPaese.set(chiave, voce)
+  }
   for (const { a, v } of valutazioni) {
     const righe = a?.asset_esposizione_geografica ?? []
-    if (!righe.length) perPaese.set('Non specificato', (perPaese.get('Non specificato') ?? 0) + v.valore)
-    for (const r of righe) perPaese.set(r.paese, (perPaese.get(r.paese) ?? 0) + (v.valore * Number(r.percentuale)) / 100)
+    if (!righe.length) aggiungi('Non specificato', v.valore)
+    for (const r of righe) aggiungi(r.paese, (v.valore * Number(r.percentuale)) / 100)
   }
-  const paesi = [...perPaese.entries()].sort((x, y) => y[1] - x[1])
-  const esposizione = paesi.slice(0, 7).map(([paese, valore], i) => ({ id: paese, etichetta: paese, valore, colore: coloreSerie(i) }))
-  if (paesi.length > 7) esposizione.push({ id: 'altro', etichetta: 'Altri paesi', valore: paesi.slice(7).reduce((t, [, v]) => t + v, 0), colore: COLORE_ALTRO })
+  const altriDichiarati = perPaese.get(ALTRI)?.valore ?? 0
+  const paesi = [...perPaese.entries()].filter(([k]) => k !== ALTRI).map(([, x]) => x).sort((x, y) => y.valore - x.valore)
+  const esposizione = paesi.slice(0, 7).map((x, i) => ({ id: x.nome, etichetta: x.nome, valore: x.valore, colore: coloreSerie(i) }))
+  const altri = altriDichiarati + paesi.slice(7).reduce((t, x) => t + x.valore, 0)
+  if (altri > 0) esposizione.push({ id: 'altro', etichetta: 'Altri paesi', valore: altri, colore: COLORE_ALTRO })
 
   const liquiditaNelPeriodo = periodo === 'tutto' ? serie.liquidita : serie.liquidita.slice(-periodo)
   const riquadri = [
