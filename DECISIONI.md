@@ -77,3 +77,9 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Esclusi gli interessi del conto (macrocategoria "Investimenti" del file), come per lo storico.
 - Create le microcategorie mancanti "Dentista" (Spese mediche › Visite mediche) e "Provvigioni" (sotto Lavoro).
 - Una riga con formula rotta nel file è stata inserita con l'importo confermato a voce; due righe con data futura entrano nella liquidità solo alla loro data.
+
+## 2026-10-20 · Rettifiche di liquidità
+
+- Tabella `rettifiche_liquidita` (data, importo con segno, nota): allinea la liquidità dell'app al saldo reale dei conti quando c'è una differenza che non si riesce a ricostruire.
+- Si registra da Impostazioni › Saldo e soglie: si scrive il saldo reale di oggi e l'app registra la differenza con la data di oggi.
+- Conta nella liquidità (viste `liquidita` e `riepilogo_mensile`) e quindi nel patrimonio, ma non è né una spesa né un'entrata: statistiche e tasso di risparmio non cambiano. Nell'export compare nel foglio "Rettifiche".

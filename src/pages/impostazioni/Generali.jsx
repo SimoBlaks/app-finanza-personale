@@ -3,6 +3,7 @@ import { supabase } from '../../supabase'
 import { useSessione } from '../../auth/Sessione'
 import { messaggioErrore } from '../../lib/errori'
 import { leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
+import AllineaLiquidita from './AllineaLiquidita'
 
 export default function Generali() {
   const sessione = useSessione()
@@ -53,6 +54,7 @@ export default function Generali() {
   }
 
   return (
+    <>
     <form className="scheda modulo" onSubmit={salva}>
       <h2>Saldo iniziale</h2>
       <p className="nota">Il patrimonio in dashboard parte da questo saldo, alla data indicata.</p>
@@ -73,5 +75,7 @@ export default function Generali() {
         <button className="primario">Salva</button>
       </div>
     </form>
+    <AllineaLiquidita />
+    </>
   )
 }

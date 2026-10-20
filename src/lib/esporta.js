@@ -61,7 +61,7 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
   avanzamento('Leggo i dati…')
   const da = `${annoDa}-01-01`
   const a = `${annoA}-12-31`
-  const [albero, persone, asset, transazioni, rimborsi, operazioni, proventi] = await Promise.all([
+  const [albero, persone, asset, transazioni, rimborsi, operazioni, proventi, rettifiche] = await Promise.all([
     caricaAlbero(),
     supabase.from('persone').select('id, nome'),
     supabase.from('asset').select('id, nome, ticker_isin, quotazione'),
@@ -69,6 +69,7 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
     leggiTutto(() => supabase.from('pagamenti_saldo').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
     leggiTutto(() => supabase.from('operazioni_investimento').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
     leggiTutto(() => supabase.from('proventi_investimento').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
+    leggiTutto(() => supabase.from('rettifiche_liquidita').select('*').gte('data', da).lte('data', a).order('data').order('created_at').order('id')),
   ])
   if (albero.errore) throw albero.errore
   if (persone.error) throw persone.error
@@ -208,6 +209,17 @@ export async function creaFileExcel({ annoDa, annoA, avanzamento = () => {} }) {
     riga.getCell(5).numFmt = '#,##0.######'
     riga.getCell(6).numFmt = x?.quotazione === 'percentuale' ? '0.00####"%"' : '#,##0.00#### "€"'
     for (const c of [7, 8, 9, 10]) riga.getCell(c).numFmt = FORMATO_EURO
+  }
+
+  // Rettifiche di liquidità (allineamenti al saldo reale dei conti)
+  if (rettifiche.length) {
+    const ft = wb.addWorksheet('Rettifiche')
+    intestazione(ft, ['Data', 'Importo', 'Nota'], [12, 13, 40])
+    for (const r of rettifiche) {
+      const riga = ft.addRow([comeData(r.data), euro2(r.importo), r.nota ?? ''])
+      riga.getCell(1).numFmt = FORMATO_DATA
+      riga.getCell(2).numFmt = FORMATO_EURO
+    }
   }
 
   return { wb, riepilogo: { transazioni: transazioni.length, anni: perAnno.size, rimborsi: rimborsi.length, operazioni: operazioni.length + proventi.length } }
