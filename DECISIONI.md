@@ -105,3 +105,11 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Filtri aggiunti: "Future", "Ricorrenti", persona (spese condivise e rimborsi) e **più categorie insieme** a qualsiasi livello; una voce scelta comprende le sue interne, una scelta parziale si vede con il trattino.
 - Chiudendo una registrazione aperta dall'elenco si torna nello stesso punto, con le righe già caricate.
 - Il menu (laterale su schermi larghi, in basso sul telefono) è colorato; su schermi larghi si può ridurre alle sole icone, scelta salvata sul dispositivo.
+- Con qualsiasi filtro attivo compaiono i totali (tua quota) di entrate e uscite di tutti i movimenti trovati, più i rimborsi ricevuti e pagati se presenti.
+
+## 2026-10-21 · Scorciatoie di categoria
+
+- In Impostazioni › Scorciatoie si creano pulsanti con tipo (Pagamento o Incasso), percorso macro › categoria › micro, nome facoltativo (altrimenti quello della voce più interna), nota facoltativa e ordine (tabella `scorciatoie_categoria`, salvata nel database: uguale su tutti i dispositivi).
+- I pulsanti compaiono in cima alla schermata di una **nuova** transazione: un tocco imposta tipo, categoria e nota. La nota della scorciatoia sostituisce solo una nota vuota o arrivata da un'altra scorciatoia, mai un testo scritto a mano.
+- Una scorciatoia con una categoria archiviata non compare nella registrazione; eliminando la categoria si elimina anche la scorciatoia.
+- Nella schermata di registrazione il tipo "Spesa" si chiama **"Pagamento"**, per non confonderlo con una scorciatoia della spesa al supermercato.

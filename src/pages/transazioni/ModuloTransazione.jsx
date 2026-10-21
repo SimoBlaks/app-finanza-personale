@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { euro, inCentesimi, leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
 import { aggiungiMesi, frequenze } from '../../lib/date'
+import { nomeScorciatoia, scorciatoiaAttiva, tipiTransazione } from '../../lib/scorciatoie'
 import SceltaCategoria from '../../components/SceltaCategoria'
 import { useConferma } from '../../components/Conferma'
 
@@ -33,6 +34,28 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
   const [invio, setInvio] = useState(false)
   const conferma = useConferma()
   const nuova = !f.id
+  const [scorciatoie, setScorciatoie] = useState([])
+
+  // le scorciatoie servono solo per le transazioni nuove; se non si caricano, il modulo funziona lo stesso
+  useEffect(() => {
+    if (!nuova) return
+    supabase.from('scorciatoie_categoria').select('*').order('ordine').order('created_at')
+      .then(({ data }) => setScorciatoie((data ?? []).filter((s) => scorciatoiaAttiva(albero, s))))
+  }, [nuova, albero])
+
+  // La nota della scorciatoia non cancella un testo scritto a mano: sostituisce solo una nota
+  // vuota o arrivata da un'altra scorciatoia.
+  const usaScorciatoia = (s) => {
+    imposta('tipo', s.tipo)
+    imposta('categoria', { macroId: s.macrocategoria_id, catId: s.categoria_id, microId: s.microcategoria_id })
+    setF((x) => {
+      const daScorciatoia = !x.nota.trim() || scorciatoie.some((a) => a.nota && a.nota === x.nota)
+      return daScorciatoia ? { ...x, nota: s.nota ?? '' } : x
+    })
+  }
+  const scorciatoiaScelta = (s) =>
+    f.tipo === s.tipo && f.categoria.macroId === s.macrocategoria_id &&
+    (f.categoria.catId ?? null) === s.categoria_id && (f.categoria.microId ?? null) === s.microcategoria_id
 
   // Finché l'utente non tocca la prossima scadenza, la teniamo allineata a data + frequenza.
   const imposta = (campo, valore) =>
@@ -111,10 +134,23 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
     <form className="scheda modulo" onSubmit={salva}>
       <h2>{nuova ? 'Nuova transazione' : 'Modifica transazione'}</h2>
 
+      {scorciatoie.length > 0 && (
+        <div>
+          <span className="etichetta-campo">Scorciatoie</span>
+          <div className="pulsanti-scelta scorciatoie">
+            {scorciatoie.map((s) => (
+              <button type="button" key={s.id} className={`piccolo ${s.tipo} ${scorciatoiaScelta(s) ? 'selezionato' : ''}`} onClick={() => usaScorciatoia(s)}>
+                {nomeScorciatoia(albero, s)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="interruttore-tipo" role="radiogroup">
-        {['spesa', 'incasso'].map((t) => (
+        {Object.entries(tipiTransazione).map(([t, etichetta]) => (
           <button type="button" key={t} className={f.tipo === t ? `selezionato ${t}` : ''} onClick={() => imposta('tipo', t)}>
-            {t === 'spesa' ? 'Spesa' : 'Incasso'}
+            {etichetta}
           </button>
         ))}
       </div>

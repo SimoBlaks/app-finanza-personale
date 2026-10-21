@@ -327,6 +327,10 @@ button:disabled { opacity: 0.6; cursor: default; }
 .voce-categoria:hover { background: var(--sfondo); }
 .voce-categoria-riga { display: flex; align-items: center; }
 /* filtro con più categorie: caselle di spunta e voci scelte in alto */
+/* Scorciatoie di categoria: gli incassi con il bordo verde per distinguerli dai pagamenti */
+.scorciatoie .incasso:not(.selezionato) { border-color: var(--successo); }
+.scorciatoie .incasso.selezionato { background: var(--successo); border-color: var(--successo); color: #fff; }
+.percorso-scorciatoia { display: block; margin: 0.1rem 0 0; }
 .categorie-scelte { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .categorie-scelte .selezionato { background: var(--primario); color: var(--primario-testo); border-color: var(--primario); }
 .elenco-filtro { max-height: 340px; overflow-y: auto; border: 1px solid var(--bordo); border-radius: 8px; }

@@ -4,6 +4,7 @@ import SceltaTema from '../../components/Tema'
 
 const schede = [
   { a: 'categorie', etichetta: 'Categorie' },
+  { a: 'scorciatoie', etichetta: 'Scorciatoie' },
   { a: 'persone', etichetta: 'Persone' },
   { a: 'asset', etichetta: 'Asset' },
   { a: 'generali', etichetta: 'Saldo e soglie' },

@@ -11,6 +11,7 @@ import Persone from './pages/impostazioni/Persone'
 import Asset from './pages/impostazioni/Asset'
 import Generali from './pages/impostazioni/Generali'
 import Esporta from './pages/impostazioni/Esporta'
+import Scorciatoie from './pages/impostazioni/Scorciatoie'
 
 function SoloAutenticato({ children }) {
   const sessione = useSessione()
@@ -38,6 +39,7 @@ export default function App() {
           <Route index element={<Navigate to="categorie" replace />} />
           <Route path="categorie" element={<Categorie />} />
           <Route path="persone" element={<Persone />} />
+          <Route path="scorciatoie" element={<Scorciatoie />} />
           <Route path="asset" element={<Asset />} />
           <Route path="generali" element={<Generali />} />
           <Route path="esporta" element={<Esporta />} />
