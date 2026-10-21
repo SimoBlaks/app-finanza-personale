@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { normalizza, percorso } from '../../lib/categorie'
 import { euro, inCentesimi, leggiNumero, numero, oggiISO } from '../../lib/numeri'
 import { aggiungiMesi, dataBreve, dataEstesa, limitiMese, meseCorrente } from '../../lib/date'
-import SceltaCategoria from '../../components/SceltaCategoria'
+import FiltroCategorie from '../../components/FiltroCategorie'
 
 const BLOCCO = 50
 const tipi = { tutte: 'Tutte', spesa: 'Spese', incasso: 'Incassi', rimborso: 'Rimborsi' }
 
-export const filtriVuoti = { testo: '', tipo: 'tutte', da: '', a: '', categoria: {} }
+export const filtriVuoti = { testo: '', tipo: 'tutte', da: '', a: '', categorie: [], persona: '', future: false, ricorrenti: false }
+
+// Ordinamento della tabella (l'elenco va sempre per data, dal più recente).
+export const ordineIniziale = { campo: 'data', crescente: false }
 
 const annoCorrente = () => oggiISO().slice(0, 4)
 const scorciatoie = [
@@ -40,26 +43,54 @@ function ricerca(testo, albero, campiImporto) {
   return parti.join(',')
 }
 
+// Più categorie scelte: basta che la transazione rientri in una di esse.
+const campiLivello = { macro: 'macrocategoria_id', cat: 'categoria_id', micro: 'microcategoria_id' }
+function condizioneCategorie(categorie) {
+  return Object.entries(campiLivello)
+    .map(([livello, campo]) => [campo, categorie.filter((c) => c.livello === livello).map((c) => c.id)])
+    .filter(([, ids]) => ids.length)
+    .map(([campo, ids]) => `${campo}.in.(${ids.join(',')})`)
+    .join(',')
+}
+
 // Applica i filtri a una query sulle transazioni.
 function filtraTransazioni(q, f, albero) {
   if (f.tipo === 'spesa' || f.tipo === 'incasso') q = q.eq('tipo', f.tipo)
   if (f.da) q = q.gte('data', f.da)
   if (f.a) q = q.lte('data', f.a)
-  if (f.categoria.microId) q = q.eq('microcategoria_id', f.categoria.microId)
-  else if (f.categoria.catId) q = q.eq('categoria_id', f.categoria.catId)
-  else if (f.categoria.macroId) q = q.eq('macrocategoria_id', f.categoria.macroId)
+  if (f.categorie.length) q = q.or(condizioneCategorie(f.categorie))
+  if (f.persona) q = q.eq('persona_id', f.persona)
+  if (f.future) q = q.gt('data', oggiISO())
+  if (f.ricorrenti) q = q.not('ricorrenza_id', 'is', null)
   if (f.testo.trim()) q = q.or(ricerca(f.testo, albero, ['quota_personale', 'importo_totale']))
   return q
 }
 
+function ordinaQuery(q, o) {
+  if (o.campo !== 'data') q = q.order(o.campo, { ascending: o.crescente })
+  const suData = o.campo === 'data' ? o.crescente : false
+  return q.order('data', { ascending: suData }).order('created_at', { ascending: suData })
+}
+
 // I rimborsi non hanno categoria e non sono né spese né incassi.
-const conRimborsi = (f) => (f.tipo === 'tutte' || f.tipo === 'rimborso') && !f.categoria.macroId
+const conRimborsi = (f) => (f.tipo === 'tutte' || f.tipo === 'rimborso') && !f.categorie.length && !f.ricorrenti
 const conTransazioni = (f) => f.tipo !== 'rimborso'
 
-const ordina = (x, y) => (x.data === y.data ? y.created_at.localeCompare(x.created_at) : y.data.localeCompare(x.data))
+// Confronto tra due voci con l'ordinamento scelto; per i rimborsi l'importo vale per tutte le colonne di importo.
+const valore = (v, campo) => (campo === 'data' ? v.data : Number(v.genere === 'rimborso' ? v.importo : v[campo]))
+const confronta = (o) => (x, y) => {
+  const a = valore(x, o.campo)
+  const b = valore(y, o.campo)
+  if (a !== b) return (a < b ? -1 : 1) * (o.crescente ? 1 : -1)
+  if (o.campo === 'data') return x.created_at.localeCompare(y.created_at) * (o.crescente ? 1 : -1)
+  return y.data.localeCompare(x.data) || y.created_at.localeCompare(x.created_at)
+}
+
+const futura = (v) => v.data > oggiISO()
 
 // Elenco di tutte le transazioni (e i rimborsi), 50 alla volta, con filtri facoltativi.
-export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onApri }) {
+export default function Cronologia({ albero, persone, nomePersona, filtri, setFiltri, vista, setVista, ordineTabella, setOrdine, aggiorna, onApri }) {
+  const ordine = vista === 'tabella' ? ordineTabella : ordineIniziale
   const [testo, setTesto] = useState(filtri.testo)
   const [mostraFiltri, setMostraFiltri] = useState(false)
   const [transazioni, setTransazioni] = useState([])
@@ -76,21 +107,23 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
     return () => clearTimeout(t)
   }, [testo, setFiltri])
 
-  const carica = useCallback(async () => {
+  // quante: righe da rileggere (dopo una modifica si rileggono tutte quelle già caricate)
+  const carica = useCallback(async (quante = BLOCCO, rilettura = false) => {
     setCaricamento(true)
     setErrore('')
-    setMostrati(BLOCCO)
+    if (!rilettura) setMostrati(BLOCCO)
     const richieste = [
       conTransazioni(filtri)
-        ? filtraTransazioni(supabase.from('transazioni').select('*', { count: 'exact' }), filtri, albero)
-            .order('data', { ascending: false }).order('created_at', { ascending: false })
-            .range(0, BLOCCO - 1)
+        ? ordinaQuery(filtraTransazioni(supabase.from('transazioni').select('*', { count: 'exact' }), filtri, albero), ordine)
+            .range(0, quante - 1)
         : Promise.resolve({ data: [], count: 0 }),
       conRimborsi(filtri)
         ? (() => {
             let q = supabase.from('pagamenti_saldo').select('*').order('data', { ascending: false }).order('created_at', { ascending: false })
             if (filtri.da) q = q.gte('data', filtri.da)
             if (filtri.a) q = q.lte('data', filtri.a)
+            if (filtri.persona) q = q.eq('persona_id', filtri.persona)
+            if (filtri.future) q = q.gt('data', oggiISO())
             if (filtri.testo.trim()) q = q.or(ricerca(filtri.testo, null, ['importo']))
             return q
           })()
@@ -102,7 +135,7 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
     setTransazioni(t.data.map((x) => ({ ...x, genere: 'transazione' })))
     setRimborsi(r.data.map((x) => ({ ...x, genere: 'rimborso' })))
     setConteggio({ transazioni: t.count ?? 0, rimborsi: r.data.length })
-  }, [filtri, albero])
+  }, [filtri, albero, ordine])
 
   // Totali (sulla tua quota) solo se è impostato un periodo: si leggono a pagine da 1000.
   const caricaTotali = useCallback(async () => {
@@ -126,9 +159,19 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
   useEffect(() => { carica() }, [carica])
   useEffect(() => { caricaTotali() }, [caricaTotali])
 
+  // chiuso un modulo, si rileggono le righe già mostrate senza tornare all'inizio
+  const caricate = useRef(BLOCCO)
+  caricate.current = Math.max(transazioni.length, BLOCCO)
+  const ultimoAggiorna = useRef(aggiorna)
+  useEffect(() => {
+    if (ultimoAggiorna.current === aggiorna) return
+    ultimoAggiorna.current = aggiorna
+    carica(caricate.current, true)
+    caricaTotali()
+  }, [aggiorna, carica, caricaTotali])
+
   async function caricaAltre() {
-    const { data, error } = await filtraTransazioni(supabase.from('transazioni').select('*'), filtri, albero)
-      .order('data', { ascending: false }).order('created_at', { ascending: false })
+    const { data, error } = await ordinaQuery(filtraTransazioni(supabase.from('transazioni').select('*'), filtri, albero), ordine)
       .range(transazioni.length, transazioni.length + BLOCCO - 1)
     if (error) return setErrore(messaggioErrore(error))
     setTransazioni((t) => [...t, ...data.map((x) => ({ ...x, genere: 'transazione' }))])
@@ -138,11 +181,12 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
 
   // Rimborsi mescolati alle transazioni: mostro solo quelli che cadono nel tratto già caricato.
   const voci = useMemo(() => {
-    if (!conTransazioni(filtri)) return rimborsi.slice(0, mostrati)
-    const limite = altreTransazioni ? transazioni[transazioni.length - 1]?.data : null
-    const r = limite ? rimborsi.filter((x) => x.data >= limite) : rimborsi
-    return [...transazioni, ...r].sort(ordina)
-  }, [transazioni, rimborsi, filtri, altreTransazioni, mostrati])
+    const cmp = confronta(ordine)
+    if (!conTransazioni(filtri)) return [...rimborsi].sort(cmp).slice(0, mostrati)
+    const ultima = altreTransazioni ? transazioni[transazioni.length - 1] : null
+    const r = ultima ? rimborsi.filter((x) => cmp(x, ultima) <= 0) : rimborsi
+    return [...transazioni, ...r].sort(cmp)
+  }, [transazioni, rimborsi, filtri, altreTransazioni, mostrati, ordine])
 
   const perGiorno = useMemo(() => {
     const gruppi = []
@@ -155,7 +199,7 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
   }, [voci])
 
   const imposta = (campo, valore) => setFiltri((f) => ({ ...f, [campo]: valore }))
-  const attivi = [filtri.tipo !== 'tutte', filtri.da || filtri.a, filtri.categoria.macroId].filter(Boolean).length
+  const attivi = [filtri.tipo !== 'tutte', filtri.da || filtri.a, filtri.categorie.length > 0, filtri.persona, filtri.future, filtri.ricorrenti].filter(Boolean).length
   const qualcosaAttivo = attivi > 0 || filtri.testo.trim()
   const totaleTrovate = conteggio.transazioni + conteggio.rimborsi
   const ancora = conTransazioni(filtri) ? altreTransazioni : mostrati < rimborsi.length
@@ -204,9 +248,29 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
 
           {filtri.tipo !== 'rimborso' && (
             <div>
-              <span className="etichetta-campo">Categoria</span>
-              <SceltaCategoria albero={albero} valore={filtri.categoria} onChange={(v) => imposta('categoria', v)} />
+              <span className="etichetta-campo">Categorie (puoi sceglierne più di una)</span>
+              <FiltroCategorie albero={albero} valore={filtri.categorie} onChange={(v) => imposta('categorie', v)} />
             </div>
+          )}
+
+          <div>
+            <span className="etichetta-campo">Mostra solo</span>
+            <div className="pulsanti-scelta">
+              <button className={`piccolo ${filtri.future ? 'selezionato' : ''}`} onClick={() => imposta('future', !filtri.future)}>Future</button>
+              {filtri.tipo !== 'rimborso' && (
+                <button className={`piccolo ${filtri.ricorrenti ? 'selezionato' : ''}`} onClick={() => imposta('ricorrenti', !filtri.ricorrenti)}>Ricorrenti</button>
+              )}
+            </div>
+          </div>
+
+          {persone.length > 0 && (
+            <label>
+              Persona (spese condivise e rimborsi)
+              <select value={filtri.persona} onChange={(e) => imposta('persona', e.target.value)}>
+                <option value="">Tutte</option>
+                {persone.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+              </select>
+            </label>
           )}
 
           <div className="azioni-modulo">
@@ -226,6 +290,10 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
         {qualcosaAttivo && (
           <button className="link" onClick={() => { setTesto(''); setFiltri(filtriVuoti) }}>Azzera filtri</button>
         )}
+        <span className="interruttore-vista scelta-vista" role="group" aria-label="Visualizzazione">
+          <button className={vista === 'elenco' ? 'attivo' : ''} aria-pressed={vista === 'elenco'} onClick={() => setVista('elenco')}>Elenco</button>
+          <button className={vista === 'tabella' ? 'attivo' : ''} aria-pressed={vista === 'tabella'} onClick={() => setVista('tabella')}>Tabella</button>
+        </span>
       </p>
 
       {totali && (
@@ -238,27 +306,77 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
       {errore && <p className="errore">{errore}</p>}
       {!caricamento && !voci.length && <p className="nota">Nessun movimento{qualcosaAttivo ? ' con questi filtri' : ''}.</p>}
 
-      {perGiorno.map((g) => (
+      {vista === 'tabella' && voci.length > 0 && (
+        <div className="scheda contenitore-tabella">
+          <table className="tabella-movimenti">
+            <thead>
+              <tr>
+                <Intestazione campo="data" etichetta="Data" ordine={ordine} setOrdine={setOrdine} />
+                <th>Descrizione</th>
+                <th>Categoria</th>
+                <th>Persona</th>
+                <Intestazione campo="importo_totale" etichetta="Totale" ordine={ordine} setOrdine={setOrdine} numerica />
+                <Intestazione campo="quota_personale" etichetta="Tua quota" ordine={ordine} setOrdine={setOrdine} numerica />
+              </tr>
+            </thead>
+            <tbody>
+              {voci.map((v) => {
+                const apri = () => onApri({ tipo: v.genere, voce: v })
+                const tasti = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apri() } }
+                const classi = [v.genere === 'rimborso' && 'rimborso', futura(v) && 'futura'].filter(Boolean).join(' ')
+                const data = <td className="cella-data">{dataBreve(v.data)}{futura(v) && <span className="etichetta attenzione">programmata</span>}</td>
+                if (v.genere === 'rimborso')
+                  return (
+                    <tr key={v.id} className={classi} tabIndex={0} onClick={apri} onKeyDown={tasti}>
+                      {data}
+                      <td><strong>Rimborso {v.direzione === 'ricevuto' ? 'ricevuto' : 'dato'}</strong>{v.nota && <span className="nota"> · {v.nota}</span>}</td>
+                      <td className="nota">—</td>
+                      <td>{nomePersona(v.persona_id)}</td>
+                      <td className="numerica">{euro(v.importo)}</td>
+                      <td className="numerica"><span className="importo">{v.direzione === 'ricevuto' ? '+' : '−'}{euro(v.importo)}</span></td>
+                    </tr>
+                  )
+                return (
+                  <tr key={v.id} className={classi} tabIndex={0} onClick={apri} onKeyDown={tasti}>
+                    {data}
+                    <td>
+                      {v.nota ? <strong>{v.nota}</strong> : <span className="nota">—</span>}
+                      {v.ricorrenza_id && <span className="etichetta">ricorrente</span>}
+                    </td>
+                    <td>{percorso(albero, v.macrocategoria_id, v.categoria_id, v.microcategoria_id) || <span className="nota">—</span>}</td>
+                    <td>{v.condivisa ? nomePersona(v.persona_id) : <span className="nota">—</span>}</td>
+                    <td className="numerica">{euro(v.importo_totale)}</td>
+                    <td className="numerica"><span className={`importo ${v.tipo}`}>{v.tipo === 'incasso' ? '+' : '−'}{euro(v.quota_personale)}</span></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {vista === 'elenco' && perGiorno.map((g) => (
         <div key={g.data} className="giorno">
           <h3>{dataEstesa(g.data)} {g.data.slice(0, 4) !== annoCorrente() && g.data.slice(0, 4)}</h3>
           <div className="scheda elenco-movimenti">
             {g.voci.map((v) =>
               v.genere === 'rimborso' ? (
-                <button key={v.id} className="movimento rimborso" onClick={() => onApri({ tipo: 'rimborso', voce: v })}>
+                <button key={v.id} className={`movimento rimborso ${futura(v) ? 'futura' : ''}`} onClick={() => onApri({ tipo: 'rimborso', voce: v })}>
                   <span className="movimento-testo">
-                    <strong>Rimborso {v.direzione === 'ricevuto' ? 'da' : 'a'} {nomePersona(v.persona_id)}</strong>
+                    <strong>Rimborso {v.direzione === 'ricevuto' ? 'da' : 'a'} {nomePersona(v.persona_id)}{futura(v) && <span className="etichetta attenzione">programmata</span>}</strong>
                     {v.nota && <span className="nota">{v.nota}</span>}
                   </span>
                   <span className="importo">{v.direzione === 'ricevuto' ? '+' : '−'}{euro(v.importo)}</span>
                 </button>
               ) : (
-                <button key={v.id} className="movimento" onClick={() => onApri({ tipo: 'transazione', voce: v })}>
+                <button key={v.id} className={`movimento ${futura(v) ? 'futura' : ''}`} onClick={() => onApri({ tipo: 'transazione', voce: v })}>
                   <span className="movimento-testo">
                     <strong>{v.nota || percorso(albero, v.macrocategoria_id, v.categoria_id)}</strong>
                     <span className="nota">
                       {percorso(albero, v.macrocategoria_id, v.categoria_id, v.microcategoria_id)}
                       {v.condivisa && <span className="etichetta">condivisa con {nomePersona(v.persona_id)}</span>}
                       {v.ricorrenza_id && <span className="etichetta">ricorrente</span>}
+                      {futura(v) && <span className="etichetta attenzione">programmata</span>}
                     </span>
                   </span>
                   <span className="movimento-importi">
@@ -281,5 +399,18 @@ export default function Cronologia({ albero, nomePersona, filtri, setFiltri, onA
         </button>
       )}
     </>
+  )
+}
+
+// Intestazione di colonna che cambia l'ordinamento: primo clic dal più grande/recente, secondo clic al contrario.
+function Intestazione({ campo, etichetta, ordine, setOrdine, numerica }) {
+  const attiva = ordine.campo === campo
+  const cambia = () => setOrdine(attiva ? { campo, crescente: !ordine.crescente } : { campo, crescente: false })
+  return (
+    <th className={numerica ? 'numerica' : ''} aria-sort={attiva ? (ordine.crescente ? 'ascending' : 'descending') : 'none'}>
+      <button className={`ordina ${attiva ? 'attiva' : ''}`} onClick={cambia}>
+        {etichetta}<span aria-hidden="true">{attiva ? (ordine.crescente ? ' ↑' : ' ↓') : ' ↕'}</span>
+      </button>
+    </th>
   )
 }

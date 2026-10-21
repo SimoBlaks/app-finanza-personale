@@ -20,12 +20,20 @@ export default function SceltaCategoria({ albero, valore, onChange }) {
           <span>{percorso(albero, macroId, catId, microId)}</span>
           <button type="button" className="piccolo" onClick={() => { setTesto(''); onChange({}) }}>Cambia</button>
         </div>
-        {!catId && categorie.length > 0 && (
+        {/* la categoria scelta resta tra i pulsanti: un secondo tocco la toglie (e toglie la micro) */}
+        {categorie.length > 0 && (
           <>
             <p className="nota">Categoria (facoltativa):</p>
             <div className="pulsanti-scelta">
               {categorie.map((c) => (
-                <button type="button" key={c.id} className="piccolo" onClick={() => onChange({ macroId, catId: c.id })}>{c.nome}</button>
+                <button
+                  type="button"
+                  key={c.id}
+                  className={`piccolo ${c.id === catId ? 'selezionato' : ''}`}
+                  onClick={() => onChange(c.id === catId ? { macroId } : { macroId, catId: c.id })}
+                >
+                  {c.nome}
+                </button>
               ))}
             </div>
           </>

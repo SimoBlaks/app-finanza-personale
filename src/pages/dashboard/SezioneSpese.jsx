@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, inCentesimi } from '../../lib/numeri'
+import { euro, inCentesimi, oggiISO } from '../../lib/numeri'
 import { dataBreve, meseCorrente, nomeMese, spostaMese } from '../../lib/date'
 import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Colonne from '../../components/grafici/Colonne'
@@ -174,7 +174,7 @@ export default function SezioneSpese({ albero, meseIniziale }) {
           <h3>Elenco {tipi[tipo].plurale}</h3>
           <div className="elenco-movimenti">
             {elenco.map((s) => (
-              <div key={s.id} className="movimento statico">
+              <div key={s.id} className={`movimento statico ${s.data > oggiISO() ? 'futura' : ''}`}>
                 <span className="movimento-testo">
                   <strong>{s.nota || nome(s.categoria_id ?? s.macrocategoria_id)}</strong>
                   <span className="nota">

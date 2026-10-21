@@ -132,7 +132,7 @@ export default function Investimenti() {
   return (
     <section>
       <h1>Investimenti</h1>
-      <div className="azioni-pagina">
+      <div className="azioni-pagina uguali">
         <button className="primario" onClick={() => setModulo({ tipo: 'acquisto', operazione: null })}>+ Nuovo acquisto</button>
         <button onClick={() => setModulo({ tipo: 'vendita', operazione: null })} disabled={!possedute.length}>Vendita</button>
         <button onClick={() => setModulo({ tipo: 'provento', provento: null })} disabled={!asset.length}>Dividendo / cedola</button>

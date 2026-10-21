@@ -97,3 +97,11 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Il job notturno delle ricorrenze crea a ogni scadenza un acquisto per riga (tabelle `piani_accumulo` e `piani_accumulo_righe`; sulle operazioni `piano_id` e `da_verificare`). Il prezzo è **stimato**: ultimo prezzo inserito fino a quella data, altrimenti PMC, altrimenti prezzo di riferimento della riga. Con l'importo fisso la quantità è importo ÷ prezzo stimato.
 - Gli acquisti generati sono segnati **"da verificare"**: l'app lo segnala in Investimenti; aprendo l'acquisto e salvandolo con i dati reali del broker l'etichetta sparisce.
 - Scadenze passate al momento della creazione vengono recuperate la notte successiva; riattivando un piano sospeso si riparte invece dalla prima scadenza da oggi in poi. Eliminare un piano non cancella gli acquisti già creati.
+
+## 2026-10-21 · Transazioni: tabella, filtri e grafica
+
+- I movimenti con data successiva a oggi hanno il bordo arancione e l'etichetta **"programmata"** (cronologia ed elenco della dashboard).
+- In Transazioni l'interruttore **Elenco / Tabella** sceglie la vista; la scelta resta salvata sul dispositivo. La tabella ha le colonne Data, Descrizione, Categoria, Persona, Totale e Tua quota, ordinabili per data e importi (l'elenco resta sempre per data).
+- Filtri aggiunti: "Future", "Ricorrenti", persona (spese condivise e rimborsi) e **più categorie insieme** a qualsiasi livello; una voce scelta comprende le sue interne, una scelta parziale si vede con il trattino.
+- Chiudendo una registrazione aperta dall'elenco si torna nello stesso punto, con le righe già caricate.
+- Il menu (laterale su schermi larghi, in basso sul telefono) è colorato; su schermi larghi si può ridurre alle sole icone, scelta salvata sul dispositivo.
