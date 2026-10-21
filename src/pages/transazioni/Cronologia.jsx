@@ -137,9 +137,14 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
     setConteggio({ transazioni: t.count ?? 0, rimborsi: r.data.length })
   }, [filtri, albero, ordine])
 
-  // Totali (sulla tua quota) solo se è impostato un periodo: si leggono a pagine da 1000.
+  // Totali (sulla tua quota) di tutti i movimenti filtrati, non solo di quelli mostrati:
+  // si calcolano con qualsiasi filtro attivo e si leggono a pagine da 1000.
+  const richiestaTotali = useRef(0)
   const caricaTotali = useCallback(async () => {
-    if (!(filtri.da || filtri.a) || !conTransazioni(filtri)) return setTotali(null)
+    const richiesta = ++richiestaTotali.current
+    const filtrato = filtri.testo.trim() || filtri.tipo !== 'tutte' || filtri.da || filtri.a || filtri.categorie.length ||
+      filtri.persona || filtri.future || filtri.ricorrenti
+    if (!filtrato || !conTransazioni(filtri)) return setTotali(null)
     let entrate = 0
     let uscite = 0
     for (let da = 0; ; da += 1000) {
@@ -153,7 +158,8 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
       }
       if (data.length < 1000) break
     }
-    setTotali({ entrate: entrate / 100, uscite: uscite / 100 })
+    // se nel frattempo i filtri sono cambiati, questo risultato è vecchio
+    if (richiesta === richiestaTotali.current) setTotali({ entrate: entrate / 100, uscite: uscite / 100 })
   }, [filtri, albero])
 
   useEffect(() => { carica() }, [carica])
@@ -201,6 +207,12 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
   const imposta = (campo, valore) => setFiltri((f) => ({ ...f, [campo]: valore }))
   const attivi = [filtri.tipo !== 'tutte', filtri.da || filtri.a, filtri.categorie.length > 0, filtri.persona, filtri.future, filtri.ricorrenti].filter(Boolean).length
   const qualcosaAttivo = attivi > 0 || filtri.testo.trim()
+  // i rimborsi filtrati sono già tutti caricati: i loro totali si fanno qui
+  const totaliRimborsi = useMemo(() => {
+    if (!qualcosaAttivo || !rimborsi.length) return null
+    const somma = (direzione) => rimborsi.filter((r) => r.direzione === direzione).reduce((t, r) => t + inCentesimi(String(r.importo)), 0) / 100
+    return { ricevuti: somma('ricevuto'), dati: somma('pagato') }
+  }, [rimborsi, qualcosaAttivo])
   const totaleTrovate = conteggio.transazioni + conteggio.rimborsi
   const ancora = conTransazioni(filtri) ? altreTransazioni : mostrati < rimborsi.length
 
@@ -296,10 +308,20 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
         </span>
       </p>
 
-      {totali && (
+      {(totali || totaliRimborsi) && !caricamento && (
         <div className="totali-mese">
-          <div><span className="nota">Entrate</span><strong className="importo incasso">{euro(totali.entrate)}</strong></div>
-          <div><span className="nota">Uscite (tua quota)</span><strong className="importo spesa">{euro(totali.uscite)}</strong></div>
+          {totali && filtri.tipo !== 'spesa' && (
+            <div><span className="nota">Entrate</span><strong className="importo incasso">{euro(totali.entrate)}</strong></div>
+          )}
+          {totali && filtri.tipo !== 'incasso' && (
+            <div><span className="nota">Uscite (tua quota)</span><strong className="importo spesa">{euro(totali.uscite)}</strong></div>
+          )}
+          {totaliRimborsi?.ricevuti > 0 && (
+            <div><span className="nota">Rimborsi ricevuti</span><strong className="importo">{euro(totaliRimborsi.ricevuti)}</strong></div>
+          )}
+          {totaliRimborsi?.dati > 0 && (
+            <div><span className="nota">Rimborsi dati</span><strong className="importo">{euro(totaliRimborsi.dati)}</strong></div>
+          )}
         </div>
       )}
 
@@ -329,7 +351,7 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
                   return (
                     <tr key={v.id} className={classi} tabIndex={0} onClick={apri} onKeyDown={tasti}>
                       {data}
-                      <td><strong>Rimborso {v.direzione === 'ricevuto' ? 'ricevuto' : 'dato'}</strong>{v.nota && <span className="nota"> · {v.nota}</span>}</td>
+                      <td><strong>Rimborso {v.direzione === 'ricevuto' ? 'ricevuto' : 'pagato'}</strong>{v.nota && <span className="nota"> · {v.nota}</span>}</td>
                       <td className="nota">—</td>
                       <td>{nomePersona(v.persona_id)}</td>
                       <td className="numerica">{euro(v.importo)}</td>
