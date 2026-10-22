@@ -86,7 +86,12 @@ const confronta = (o) => (x, y) => {
   return y.data.localeCompare(x.data) || y.created_at.localeCompare(x.created_at)
 }
 
+// Movimenti con data futura: bordo arancione per le uscite, blu per i soldi in entrata
+// (incassi e rimborsi ricevuti).
 const futura = (v) => v.data > oggiISO()
+const inEntrata = (v) => (v.genere === 'rimborso' ? v.direzione === 'ricevuto' : v.tipo === 'incasso')
+const classeFutura = (v) => (futura(v) ? (inEntrata(v) ? 'futura entrata' : 'futura') : '')
+const Programmata = ({ v }) => <span className={`etichetta ${inEntrata(v) ? 'programmata-entrata' : 'attenzione'}`}>programmata</span>
 
 // Elenco di tutte le transazioni (e i rimborsi), 30 alla volta, con filtri facoltativi.
 export default function Cronologia({ albero, persone, nomePersona, filtri, setFiltri, vista, setVista, ordineTabella, setOrdine, aggiorna, onApri }) {
@@ -345,8 +350,8 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
               {voci.map((v) => {
                 const apri = () => onApri({ tipo: v.genere, voce: v })
                 const tasti = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apri() } }
-                const classi = [v.genere === 'rimborso' && 'rimborso', futura(v) && 'futura'].filter(Boolean).join(' ')
-                const data = <td className="cella-data">{dataBreve(v.data)}{futura(v) && <span className="etichetta attenzione">programmata</span>}</td>
+                const classi = [v.genere === 'rimborso' && 'rimborso', classeFutura(v)].filter(Boolean).join(' ')
+                const data = <td className="cella-data">{dataBreve(v.data)}{futura(v) && <Programmata v={v} />}</td>
                 if (v.genere === 'rimborso')
                   return (
                     <tr key={v.id} className={classi} tabIndex={0} onClick={apri} onKeyDown={tasti}>
@@ -383,22 +388,22 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
           <div className="scheda elenco-movimenti">
             {g.voci.map((v) =>
               v.genere === 'rimborso' ? (
-                <button key={v.id} className={`movimento rimborso ${futura(v) ? 'futura' : ''}`} onClick={() => onApri({ tipo: 'rimborso', voce: v })}>
+                <button key={v.id} className={`movimento rimborso ${classeFutura(v)}`} onClick={() => onApri({ tipo: 'rimborso', voce: v })}>
                   <span className="movimento-testo">
-                    <strong>Rimborso {v.direzione === 'ricevuto' ? 'da' : 'a'} {nomePersona(v.persona_id)}{futura(v) && <span className="etichetta attenzione">programmata</span>}</strong>
+                    <strong>Rimborso {v.direzione === 'ricevuto' ? 'da' : 'a'} {nomePersona(v.persona_id)}{futura(v) && <Programmata v={v} />}</strong>
                     {v.nota && <span className="nota">{v.nota}</span>}
                   </span>
                   <span className="importo">{v.direzione === 'ricevuto' ? '+' : '−'}{euro(v.importo)}</span>
                 </button>
               ) : (
-                <button key={v.id} className={`movimento ${futura(v) ? 'futura' : ''}`} onClick={() => onApri({ tipo: 'transazione', voce: v })}>
+                <button key={v.id} className={`movimento ${classeFutura(v)}`} onClick={() => onApri({ tipo: 'transazione', voce: v })}>
                   <span className="movimento-testo">
                     <strong>{v.nota || percorso(albero, v.macrocategoria_id, v.categoria_id)}</strong>
                     <span className="nota">
                       {percorso(albero, v.macrocategoria_id, v.categoria_id, v.microcategoria_id)}
                       {v.condivisa && <span className="etichetta">condivisa con {nomePersona(v.persona_id)}</span>}
                       {v.ricorrenza_id && <span className="etichetta">ricorrente</span>}
-                      {futura(v) && <span className="etichetta attenzione">programmata</span>}
+                      {futura(v) && <Programmata v={v} />}
                     </span>
                   </span>
                   <span className="movimento-importi">

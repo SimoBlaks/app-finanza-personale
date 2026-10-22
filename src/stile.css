@@ -570,8 +570,10 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
 .riga-piano { border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 0.75rem; margin-bottom: 0.75rem; }
 .riga-piano > .piccolo { margin-top: 0.5rem; }
 
-/* Movimenti con data futura: bordo arancione */
+/* Movimenti con data futura: bordo arancione per le uscite, blu per le entrate */
 .movimento.futura { box-shadow: inset 0 0 0 2px var(--attenzione); border-radius: 8px; }
+.movimento.futura.entrata { box-shadow: inset 0 0 0 2px var(--serie-1); }
+.etichetta.programmata-entrata { background: color-mix(in srgb, var(--serie-1) 18%, transparent); color: var(--serie-1); font-weight: 600; }
 
 /* Transazioni: vista a tabella */
 .contenuto > section.larga { max-width: 1440px; }
@@ -590,6 +592,7 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
 .tabella-movimenti tbody tr:focus-visible { outline: 2px solid var(--primario); outline-offset: -2px; }
 .tabella-movimenti tr.rimborso td { background: var(--sfondo); }
 .tabella-movimenti tbody tr.futura { outline: 2px solid var(--attenzione); outline-offset: -2px; }
+.tabella-movimenti tbody tr.futura.entrata { outline-color: var(--serie-1); }
 .tabella-movimenti .numerica { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tabella-movimenti .cella-data { white-space: nowrap; }
 .tabella-movimenti .cella-data .etichetta { display: block; width: fit-content; margin: 0.2rem 0 0; }
