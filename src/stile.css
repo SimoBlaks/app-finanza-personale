@@ -400,8 +400,6 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .riga-dettaglio { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.3rem 0; border-bottom: 1px solid var(--bordo); }
 .riga-dettaglio .nota { margin: 0; }
 .importo-piccolo { white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 0.88rem; }
-.sezione-spese h3 { margin-top: 1.25rem; }
-.sezione-spese .elenco-movimenti { border: 1px solid var(--bordo); border-radius: 8px; margin-bottom: 0.5rem; }
 
 /* Grafici: serie singola nel colore primario, testi nei colori del testo */
 .barre { display: flex; flex-direction: column; gap: 2px; margin: 0.5rem 0; }

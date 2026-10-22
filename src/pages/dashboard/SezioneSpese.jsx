@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, inCentesimi, oggiISO } from '../../lib/numeri'
-import { dataBreve, meseCorrente, nomeMese, spostaMese } from '../../lib/date'
+import { euro, inCentesimi } from '../../lib/numeri'
+import { meseCorrente, nomeMese, spostaMese } from '../../lib/date'
 import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Colonne from '../../components/grafici/Colonne'
 import Ciambella from '../../components/grafici/Ciambella'
@@ -24,7 +24,7 @@ function raggruppa(spese, chiave, nome) {
 }
 
 // Spese o entrate per categoria (SPEC 3.2): vista mese o anno, con discesa macro → categoria → micro.
-const tipi = { spesa: { titolo: 'Spese', plurale: 'spese', singolare: 'spesa' }, incasso: { titolo: 'Entrate', plurale: 'entrate', singolare: 'entrata' } }
+const tipi = { spesa: { titolo: 'Spese', singolare: 'spesa' }, incasso: { titolo: 'Entrate', singolare: 'entrata' } }
 
 export default function SezioneSpese({ albero, meseIniziale }) {
   const [tipo, setTipo] = useState('spesa')
@@ -32,14 +32,13 @@ export default function SezioneSpese({ albero, meseIniziale }) {
   const [mese, setMese] = useState(() => meseIniziale ?? meseCorrente())
   const [filtro, setFiltro] = useState({}) // { macroId, catId, microId }
   const [spese, setSpese] = useState([])
-  const [tutte, setTutte] = useState(false)
   const [errore, setErrore] = useState('')
   const anno = mese.slice(0, 4)
 
   useEffect(() => {
     supabase
       .from('transazioni')
-      .select('id, data, nota, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
+      .select('id, data, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
       .eq('tipo', tipo)
       .gte('data', `${anno}-01-01`)
       .lte('data', `${anno}-12-31`)
@@ -108,14 +107,11 @@ export default function SezioneSpese({ albero, meseIniziale }) {
     filtro.microId && { etichetta: nome(filtro.microId, 'Senza microcategoria'), filtro },
   ].filter(Boolean)
 
-  const elenco = tutte ? delPeriodo : delPeriodo.slice(0, 10)
-
   // cambiando tra spese ed entrate si riparte da "Tutte" le categorie
   function cambiaTipo(k) {
     if (k === tipo) return
     setSpese([])
     setFiltro({})
-    setTutte(false)
     setTipo(k)
   }
 
@@ -168,30 +164,6 @@ export default function SezioneSpese({ albero, meseIniziale }) {
         <BarreOrizzontali voci={barre.map((b) => ({ ...b, colore: coloreMacro }))} formatta={euro} onScegli={scegli ?? undefined} />
       )}
       {!delPeriodo.length && <p className="nota">Nessuna {tipi[tipo].singolare} in questo periodo.</p>}
-
-      {delPeriodo.length > 0 && (
-        <>
-          <h3>Elenco {tipi[tipo].plurale}</h3>
-          <div className="elenco-movimenti">
-            {elenco.map((s) => (
-              <div key={s.id} className={`movimento statico ${s.data > oggiISO() ? 'futura' : ''}`}>
-                <span className="movimento-testo">
-                  <strong>{s.nota || nome(s.categoria_id ?? s.macrocategoria_id)}</strong>
-                  <span className="nota">
-                    {dataBreve(s.data)} · {[s.macrocategoria_id, s.categoria_id, s.microcategoria_id].filter(Boolean).map((id) => nome(id)).join(' > ')}
-                  </span>
-                </span>
-                <span className="importo">{euro(s.quota_personale)}</span>
-              </div>
-            ))}
-          </div>
-          {delPeriodo.length > 10 && (
-            <button className="piccolo" onClick={() => setTutte((x) => !x)}>
-              {tutte ? 'Mostra meno' : `Mostra tutte (${delPeriodo.length})`}
-            </button>
-          )}
-        </>
-      )}
     </div>
   )
 }
