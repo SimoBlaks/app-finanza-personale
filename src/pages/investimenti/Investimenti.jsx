@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { euro } from '../../lib/numeri'
-import { dataBreve } from '../../lib/date'
-import { fattore, mostraPrezzo, mostraQuantita } from '../../lib/investimenti'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
 import SchedaPosizione, { percento, sommaProventi } from '../../components/SchedaPosizione'
 import ModuloOperazione from './ModuloOperazione'
@@ -12,6 +10,7 @@ import ModuloProvento from './ModuloProvento'
 import { ElencoPiani, ModuloPiano } from './PianiAccumulo'
 import AggiornaPrezzi from './AggiornaPrezzi'
 import StoricoPrezzi from './StoricoPrezzi'
+import CronologiaInvestimenti, { BLOCCO_INVESTIMENTI, filtriInvestimentiVuoti } from './CronologiaInvestimenti'
 
 export default function Investimenti() {
   const location = useLocation()
@@ -27,6 +26,9 @@ export default function Investimenti() {
   // dalla dashboard si può arrivare qui con la schermata prezzi già aperta
   const [modulo, setModulo] = useState(location.state?.apri === 'prezzi' ? { tipo: 'prezzi' } : null) // { tipo: 'acquisto' | 'vendita' | 'prezzi' | 'storico', … }
   const [errore, setErrore] = useState('')
+  // filtri e voci mostrate della cronologia restano dopo aver aperto un'operazione
+  const [filtri, setFiltri] = useState(filtriInvestimentiVuoti)
+  const [mostrati, setMostrati] = useState(BLOCCO_INVESTIMENTI)
 
   const carica = useCallback(async () => {
     const [a, p, o, u, i, pv, pa, pr] = await Promise.all([
@@ -175,51 +177,16 @@ export default function Investimenti() {
 
       <ElencoPiani piani={piani} righe={righePiani} asset={asset} onApri={(piano) => setModulo({ tipo: 'piano', piano })} onCambia={carica} />
 
-      <h2>Cronologia operazioni</h2>
-      {!cronologia.length && <p className="nota">Nessuna operazione registrata.</p>}
-      {cronologia.length > 0 && (
-        <div className="scheda elenco-movimenti">
-          {cronologia.map((o) => {
-            const a = perId[o.asset_id]
-            if (o.genere === 'provento')
-              return (
-                <button key={o.id} className="movimento" onClick={() => setModulo({ tipo: 'provento', provento: o })}>
-                  <span className="movimento-testo">
-                    <strong>{o.tipo === 'cedola' ? 'Cedola' : 'Dividendo'} · {a?.nome}</strong>
-                    <span className="nota">
-                      {dataBreve(o.data)} · lordo {euro(o.importo_lordo)} · tasse {euro(o.tasse)}{o.nota ? ` · ${o.nota}` : ''}
-                    </span>
-                  </span>
-                  <span className="importo incasso">+{euro(o.importo_netto)}</span>
-                </button>
-              )
-            const lordo = Number(o.quantita) * Number(o.prezzo) * fattore(a)
-            return (
-              <button key={o.id} className="movimento" onClick={() => setModulo({ tipo: o.tipo, operazione: o })}>
-                <span className="movimento-testo">
-                  <strong>{o.tipo === 'acquisto' ? 'Acquisto' : 'Vendita'} · {a?.nome}</strong>
-                  <span className="nota">
-                    {dataBreve(o.data)} · {mostraQuantita(a, o.quantita)} a {mostraPrezzo(a, o.prezzo)}
-                    {Number(o.spese) > 0 && ` · spese ${euro(o.spese)}`}
-                    {o.movimenta_liquidita === false && " · fuori liquidità"}
-                    {o.da_verificare && <span className="etichetta attenzione">da verificare</span>}
-                  </span>
-                  {o.tipo === 'vendita' && (
-                    <span className="nota">
-                      {Number(o.plusvalore) >= 0 ? 'Plusvalore' : 'Minusvalenza'} {euro(o.plusvalore)} · tasse {euro(o.tasse)}
-                    </span>
-                  )}
-                </span>
-                <span className={`importo ${o.movimenta_liquidita === false ? '' : o.tipo === 'acquisto' ? 'spesa' : 'incasso'}`}>
-                  {o.movimenta_liquidita === false
-                    ? euro(o.tipo === 'acquisto' ? lordo + Number(o.spese) : o.liquidita_incassata)
-                    : o.tipo === 'acquisto' ? `−${euro(lordo + Number(o.spese))}` : `+${euro(o.liquidita_incassata)}`}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      )}
+      <CronologiaInvestimenti
+        cronologia={cronologia}
+        asset={asset}
+        perId={perId}
+        filtri={filtri}
+        setFiltri={setFiltri}
+        mostrati={mostrati}
+        setMostrati={setMostrati}
+        onApri={setModulo}
+      />
     </section>
   )
 }

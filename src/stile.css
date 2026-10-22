@@ -601,3 +601,11 @@ button.pericolo-pieno { background: var(--pericolo); border-color: var(--pericol
 button.ordina { border: none; background: none; padding: 0; min-height: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
 button.ordina.attiva { text-decoration: underline; text-underline-offset: 3px; }
 .azioni-pagina.uguali > * { flex: 1 1 0; }
+/* Investimenti: pulsante dei filtri della cronologia */
+button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; border-color: var(--primario); color: var(--primario); font-weight: 600; }
+.filtro-con-spiegazione { display: flex; align-items: center; gap: 0.6rem; }
+.filtro-con-spiegazione > button { flex: none; }
+.filtro-con-spiegazione .nota { margin: 0; font-size: 0.82rem; }
+/* due campi corti affiancati anche sul telefono (es. tipo di asset e asset) */
+.pannello-filtri .griglia.affiancati { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.pannello-filtri .griglia.affiancati select { min-width: 0; text-overflow: ellipsis; }
