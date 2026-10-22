@@ -6,7 +6,7 @@ import { euro, inCentesimi, leggiNumero, numero, oggiISO } from '../../lib/numer
 import { aggiungiMesi, dataBreve, dataEstesa, limitiMese, meseCorrente } from '../../lib/date'
 import FiltroCategorie from '../../components/FiltroCategorie'
 
-const BLOCCO = 50
+const BLOCCO = 30
 const tipi = { tutte: 'Tutte', spesa: 'Spese', incasso: 'Incassi', rimborso: 'Rimborsi' }
 
 export const filtriVuoti = { testo: '', tipo: 'tutte', da: '', a: '', categorie: [], persona: '', future: false, ricorrenti: false }
@@ -88,7 +88,7 @@ const confronta = (o) => (x, y) => {
 
 const futura = (v) => v.data > oggiISO()
 
-// Elenco di tutte le transazioni (e i rimborsi), 50 alla volta, con filtri facoltativi.
+// Elenco di tutte le transazioni (e i rimborsi), 30 alla volta, con filtri facoltativi.
 export default function Cronologia({ albero, persone, nomePersona, filtri, setFiltri, vista, setVista, ordineTabella, setOrdine, aggiorna, onApri }) {
   const ordine = vista === 'tabella' ? ordineTabella : ordineIniziale
   const [testo, setTesto] = useState(filtri.testo)
