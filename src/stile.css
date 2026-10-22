@@ -609,3 +609,8 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 /* due campi corti affiancati anche sul telefono (es. tipo di asset e asset) */
 .pannello-filtri .griglia.affiancati { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .pannello-filtri .griglia.affiancati select { min-width: 0; text-overflow: ellipsis; }
+/* Investimenti conclusi */
+.posizione.conclusa .periodo-concluso { margin: -0.25rem 0 0.6rem; }
+.riga-inflazione { display: flex; align-items: flex-end; gap: 0.5rem; margin-top: 0.9rem; }
+.riga-inflazione label { flex: 1; }
+.riga-inflazione + .nota { margin: 0.3rem 0 0; font-size: 0.8rem; }

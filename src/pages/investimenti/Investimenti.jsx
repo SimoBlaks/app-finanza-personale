@@ -10,7 +10,8 @@ import ModuloProvento from './ModuloProvento'
 import { ElencoPiani, ModuloPiano } from './PianiAccumulo'
 import AggiornaPrezzi from './AggiornaPrezzi'
 import StoricoPrezzi from './StoricoPrezzi'
-import CronologiaInvestimenti, { BLOCCO_INVESTIMENTI, filtriInvestimentiVuoti } from './CronologiaInvestimenti'
+import InvestimentiConclusi, { assetConclusi } from './InvestimentiConclusi'
+import CronologiaInvestimenti,{ BLOCCO_INVESTIMENTI, filtriInvestimentiVuoti } from './CronologiaInvestimenti'
 
 export default function Investimenti() {
   const location = useLocation()
@@ -174,6 +175,8 @@ export default function Investimenti() {
           </SchedaPosizione>
         ))}
       </div>
+
+      <InvestimentiConclusi conclusi={assetConclusi(asset, operazioni)} operazioni={operazioni} proventi={proventi} onCambia={carica} />
 
       <ElencoPiani piani={piani} righe={righePiani} asset={asset} onApri={(piano) => setModulo({ tipo: 'piano', piano })} onCambia={carica} />
 

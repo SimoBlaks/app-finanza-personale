@@ -122,3 +122,9 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - Tolte dalla dashboard le schede delle singole posizioni (restano in Investimenti) e l'elenco delle spese sotto il grafico.
 - Ordine: patrimonio, poi spese/entrate, tasso di risparmio, entrate e uscite; su schermi larghi questi stanno a sinistra e patrimonio nel tempo, debiti/crediti e investimenti a destra.
 - In Transazioni si caricano 30 movimenti alla volta; le entrate programmate (incassi e rimborsi ricevuti) hanno il bordo blu, le uscite arancione.
+
+## 2026-10-22 · Investimenti: cronologia filtrabile e investimenti conclusi
+
+- La cronologia di Investimenti mostra 15 voci alla volta ("Carica altre 15"), con filtri per tipo di operazione, tipo di asset, asset, periodo e "solo da verificare" (acquisti dei PAC con prezzo stimato) e i totali delle voci trovate.
+- Un asset è **concluso** quando, dopo almeno una vendita, le quote comprate e vendute si pareggiano: compare in "Investimenti conclusi" con date di primo acquisto e ultima vendita, investito (acquisti con spese), incassato (netto delle vendite), dividendi netti, guadagno netto, spese, tasse, **ROI** (guadagno ÷ investito) e **TIR** (rendimento annuo calcolato sulle date dei singoli flussi).
+- Facoltativa, per asset: l'**inflazione cumulata** nel periodo in % (colonna `asset.inflazione_periodo`), da cui ROI reale = (1+ROI)/(1+inflazione) − 1 e TIR reale = (1+TIR)/(1+inflazione)^(1/anni) − 1.
