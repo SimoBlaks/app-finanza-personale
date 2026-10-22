@@ -128,3 +128,8 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - La cronologia di Investimenti mostra 15 voci alla volta ("Carica altre 15"), con filtri per tipo di operazione, tipo di asset, asset, periodo e "solo da verificare" (acquisti dei PAC con prezzo stimato) e i totali delle voci trovate.
 - Un asset è **concluso** quando, dopo almeno una vendita, le quote comprate e vendute si pareggiano: compare in "Investimenti conclusi" con date di primo acquisto e ultima vendita, investito (acquisti con spese), incassato (netto delle vendite), dividendi netti, guadagno netto, spese, tasse, **ROI** (guadagno ÷ investito) e **TIR** (rendimento annuo calcolato sulle date dei singoli flussi).
 - Facoltativa, per asset: l'**inflazione cumulata** nel periodo in % (colonna `asset.inflazione_periodo`), da cui ROI reale = (1+ROI)/(1+inflazione) − 1 e TIR reale = (1+TIR)/(1+inflazione)^(1/anni) − 1.
+
+## 2026-10-22 · Nuova icona dell'app
+
+- Portafoglio bianco con chiusura dorata su sfondo verde-petrolio sfumato, con due carte (menta e oro, con banda magnetica) inclinate verso destra di cui spunta solo un angolo.
+- I PNG (192, 512, 512 "maskable" con il disegno ridotto all'80%, 180 per iPhone, 32 per la scheda del browser) si rigenerano con `node scripts/genera-icone.mjs`, senza dipendenze. I nomi dei file sono nuovi rispetto alla prima icona, così browser e telefoni non riusano quelle vecchie in memoria.
