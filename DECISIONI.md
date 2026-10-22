@@ -113,3 +113,12 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - I pulsanti compaiono in cima alla schermata di una **nuova** transazione: un tocco imposta tipo, categoria e nota. La nota della scorciatoia sostituisce solo una nota vuota o arrivata da un'altra scorciatoia, mai un testo scritto a mano.
 - Una scorciatoia con una categoria archiviata non compare nella registrazione; eliminando la categoria si elimina anche la scorciatoia.
 - Nella schermata di registrazione il tipo "Spesa" si chiama **"Pagamento"**, per non confonderlo con una scorciatoia della spesa al supermercato.
+
+## 2026-10-22 · Dashboard: patrimonio nel tempo e nuova disposizione
+
+- Al posto della liquidità nel tempo c'è il **patrimonio nel tempo**, mese per mese (anche nel riquadro in alto: grafico piccolo e variazione degli ultimi 12 mesi). Ogni punto = liquidità a fine mese + investimenti + crediti − debiti; il mese in corso si chiude a oggi, così l'ultimo punto coincide con il patrimonio attuale.
+- Investimenti nel passato: quantità posseduta a fine mese × **ultimo prezzo inserito** fino a quella data; se per l'asset non c'è ancora un prezzo, si usa il PMC (costo di acquisto). Gli asset esclusi dal patrimonio non contano. Più prezzi storici si inseriscono, più il grafico è fedele.
+- Nuova ciambella **"Investito per strumento"** (azioni, ETF, obbligazioni, fondi) sul valore attuale.
+- Tolte dalla dashboard le schede delle singole posizioni (restano in Investimenti) e l'elenco delle spese sotto il grafico.
+- Ordine: patrimonio, poi spese/entrate, tasso di risparmio, entrate e uscite; su schermi larghi questi stanno a sinistra e patrimonio nel tempo, debiti/crediti e investimenti a destra.
+- In Transazioni si caricano 30 movimenti alla volta; le entrate programmate (incassi e rimborsi ricevuti) hanno il bordo blu, le uscite arancione.

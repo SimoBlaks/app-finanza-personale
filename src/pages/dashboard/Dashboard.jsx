@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, numero } from '../../lib/numeri'
+import { euro, numero, oggiISO } from '../../lib/numeri'
 import { aggiungiMesi, meseCorrente, nomeMese } from '../../lib/date'
 import { caricaAlbero } from '../../lib/categorie'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
-import SchedaPosizione, { sommaProventi } from '../../components/SchedaPosizione'
+import { tipologiePlurale } from '../../lib/investimenti'
+import { patrimonioMensile } from '../../lib/patrimonio'
 import InterruttoreCifre from '../../components/Riservatezza'
 import Area from '../../components/grafici/Area'
 import Ciambella from '../../components/grafici/Ciambella'
@@ -33,16 +34,15 @@ const Icona = ({ nome }) => (
   </svg>
 )
 
-const periodiLiquidita = { 12: '1 anno', 60: '5 anni', tutto: 'Tutto' }
+const periodiPatrimonio = { 12: '1 anno', 60: '5 anni', tutto: 'Tutto' }
 
 export default function Dashboard() {
-  const navigate = useNavigate()
   const [d, setD] = useState(null)
   const [periodo, setPeriodo] = useState(60)
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
-    const [liq, saldi, pos, asset, prezzi, imp, job, albero, mensile, proventi] = await Promise.all([
+    const [liq, saldi, pos, asset, prezzi, imp, job, albero, mensile, operazioni, storico, condivise, rimborsi] = await Promise.all([
       supabase.from('liquidita').select('*').maybeSingle(),
       supabase.from('saldi_persone').select('*').order('nome'),
       supabase.from('posizioni').select('*'),
@@ -52,13 +52,19 @@ export default function Dashboard() {
       supabase.from('esecuzioni_job').select('*').eq('job', 'ricorrenze').order('eseguito_il', { ascending: false }).limit(1).maybeSingle(),
       caricaAlbero(),
       supabase.from('riepilogo_mensile').select('mese, entrate, uscite, movimento_liquidita').order('mese'),
-      supabase.from('proventi_investimento').select('asset_id, importo_netto'),
+      // per il patrimonio nel tempo
+      supabase.from('operazioni_investimento').select('asset_id, data, tipo, quantita, prezzo, spese, created_at'),
+      supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura'),
+      supabase.from('transazioni').select('data, pagata_da, importo_totale, quota_personale').eq('condivisa', true),
+      supabase.from('pagamenti_saldo').select('data, direzione, importo'),
     ])
-    const err = liq.error || saldi.error || pos.error || asset.error || prezzi.error || imp.error || job.error || albero.errore || mensile.error || proventi.error
+    const err = liq.error || saldi.error || pos.error || asset.error || prezzi.error || imp.error || job.error || albero.errore || mensile.error ||
+      operazioni.error || storico.error || condivise.error || rimborsi.error
     if (err) return setErrore(messaggioErrore(err))
     setD({
       liquidita: liq.data, saldi: saldi.data, posizioni: pos.data, asset: asset.data, ultimi: prezzi.ultimi,
-      impostazioni: imp.impostazioni, job: job.data, albero, mensile: mensile.data, proventi: sommaProventi(proventi.data),
+      impostazioni: imp.impostazioni, job: job.data, albero, mensile: mensile.data,
+      operazioni: operazioni.data, storico: storico.data, condivise: condivise.data, rimborsi: rimborsi.data,
     })
   }, [])
 
@@ -82,7 +88,14 @@ export default function Dashboard() {
     })
     // le spese partono dall'ultimo mese che ne contiene (di solito il mese corrente)
     const ultimoConSpese = [...d.mensile].reverse().find((m) => Number(m.uscite) > 0)?.mese.slice(0, 7)
-    return { liquidita, ultimi12, ultimoConSpese }
+    const patrimonio = patrimonioMensile({
+      liquidita, asset: d.asset, operazioni: d.operazioni, prezzi: d.storico, condivise: d.condivise, rimborsi: d.rimborsi, oggi: oggiISO(),
+    }).map((p) => ({
+      ...p,
+      dettaglio: `Liquidità ${euro(p.parti.liquidita)} · Investimenti ${euro(p.parti.investimenti)}` +
+        (Math.abs(p.parti.persone) >= 0.005 ? ` · ${p.parti.persone > 0 ? 'Crediti' : 'Debiti'} ${euro(Math.abs(p.parti.persone))}` : ''),
+    }))
+    return { patrimonio, ultimi12, ultimoConSpese }
   }, [d])
 
   if (!d || !serie) return <section><h1>Dashboard</h1>{errore ? <p className="errore">{errore}</p> : <p className="caricamento">Caricamento…</p>}</section>
@@ -99,8 +112,8 @@ export default function Dashboard() {
   const liquidita = d.liquidita ? Number(d.liquidita.liquidita) : null
   const patrimonio = (liquidita ?? 0) + investimenti + crediti - debiti
 
-  // variazione della liquidità negli ultimi 12 mesi (l'andamento storico degli investimenti non è noto)
-  const ultimi13 = serie.liquidita.slice(-13)
+  // variazione del patrimonio negli ultimi 12 mesi
+  const ultimi13 = serie.patrimonio.slice(-13)
   const variazione = ultimi13.length > 1 ? ultimi13[ultimi13.length - 1].valore - ultimi13[0].valore : null
 
   // Esposizione geografica ponderata sul valore attuale (SPEC 3.7).
@@ -125,7 +138,15 @@ export default function Dashboard() {
   const altri = altriDichiarati + paesi.slice(7).reduce((t, x) => t + x.valore, 0)
   if (altri > 0) esposizione.push({ id: 'altro', etichetta: 'Altri paesi', valore: altri, colore: COLORE_ALTRO })
 
-  const liquiditaNelPeriodo = periodo === 'tutto' ? serie.liquidita : serie.liquidita.slice(-periodo)
+  // Investito per tipologia di strumento (azioni, ETF, obbligazioni, fondi), sul valore attuale.
+  const perTipologia = new Map()
+  for (const { a, v } of nelPatrimonio) perTipologia.set(a?.tipologia, (perTipologia.get(a?.tipologia) ?? 0) + v.valore)
+  const strumenti = [...perTipologia.entries()]
+    .filter(([, valore]) => valore > 0)
+    .sort((x, y) => y[1] - x[1])
+    .map(([t, valore], i) => ({ id: t ?? 'altro', etichetta: tipologiePlurale[t] ?? 'Altro', valore, colore: coloreSerie(i) }))
+
+  const patrimonioNelPeriodo = periodo === 'tutto' ? serie.patrimonio : serie.patrimonio.slice(-periodo)
   const riquadri = [
     { nome: 'liquidita', etichetta: 'Liquidità', valore: liquidita === null ? '—' : euro(liquidita) },
     { nome: 'investimenti', etichetta: 'Investimenti', valore: euro(investimenti) },
@@ -147,7 +168,7 @@ export default function Dashboard() {
             <p className="cifra-eroe">{euro(patrimonio)}</p>
             {variazione !== null && (
               <span className={`variazione ${variazione >= 0 ? 'su' : 'giu'}`}>
-                {variazione >= 0 ? '▲' : '▼'} {euro(Math.abs(variazione))} di liquidità negli ultimi 12 mesi
+                {variazione >= 0 ? '▲' : '▼'} {euro(Math.abs(variazione))} negli ultimi 12 mesi
               </span>
             )}
           </div>
@@ -171,7 +192,12 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* colonna sinistra su schermi larghi: spese/entrate, poi risparmio ed entrate-uscite */}
+      <div className="colonna-sinistra">
+      <SezioneSpese albero={d.albero} meseIniziale={serie.ultimoConSpese} />
+
       <div className="griglia-dashboard larga">
+        <SezioneRisparmio />
         <div className="scheda">
           <h2>Entrate e uscite · ultimi 12 mesi</h2>
           <ColonneDoppie
@@ -183,27 +209,34 @@ export default function Dashboard() {
             formatta={euro}
           />
         </div>
-        <SezioneRisparmio />
+      </div>
       </div>
 
-      <SezioneSpese albero={d.albero} meseIniziale={serie.ultimoConSpese} />
-
-      {/* colonna destra su schermi larghi: liquidità, debiti/crediti ed esposizione */}
+      {/* colonna destra su schermi larghi: patrimonio, debiti/crediti e investimenti */}
       <div className="colonna-destra">
-      <div className="scheda area-liquidita">
+      <div className="scheda area-patrimonio">
         <div className="intestazione-scheda">
-          <h2>Liquidità nel tempo</h2>
+          <h2>Patrimonio nel tempo</h2>
           <div className="interruttore-vista">
-            {Object.entries(periodiLiquidita).map(([k, l]) => (
+            {Object.entries(periodiPatrimonio).map(([k, l]) => (
               <button key={k} className={String(periodo) === k ? 'attivo' : ''} onClick={() => setPeriodo(k === 'tutto' ? 'tutto' : Number(k))}>{l}</button>
             ))}
           </div>
         </div>
-        <Area punti={liquiditaNelPeriodo} formatta={euro} altezza={200} />
+        <Area punti={patrimonioNelPeriodo} formatta={euro} altezza={200} />
+        <p className="nota">Investimenti valutati all'ultimo prezzo inserito fino a quel mese; senza prezzo, al costo di acquisto (PMC).</p>
       </div>
 
       <div className="griglia-dashboard area-altro">
         <SezioneDebiti saldi={d.saldi} />
+        <div className="scheda esposizione">
+          <h2>Investito per strumento</h2>
+          {strumenti.length > 0 ? (
+            <Ciambella voci={strumenti} formatta={euro} titoloCentro="Investito" />
+          ) : (
+            <p className="nota">Comparirà quando avrai degli investimenti.</p>
+          )}
+        </div>
         {esposizione.length > 0 ? (
           <div className="scheda esposizione">
             <h2>Esposizione geografica</h2>
@@ -216,17 +249,6 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-      </div>
-
-      <div className="intestazione-scheda">
-        <h2>Investimenti</h2>
-        {valutazioni.length > 0 && (
-          <button className="piccolo" onClick={() => navigate('/investimenti', { state: { apri: 'prezzi' } })}>Aggiorna Prezzi</button>
-        )}
-      </div>
-      {!valutazioni.length && <p className="nota">Nessun asset posseduto.</p>}
-      <div className="griglia-posizioni">
-        {valutazioni.map(({ p, a, v }) => <SchedaPosizione key={p.asset_id} asset={a} posizione={p} valutazione={v} proventi={d.proventi[p.asset_id]} />)}
       </div>
 
       <p className="stato-job">

@@ -4,10 +4,13 @@ const L = 1000
 const H = 200
 
 // Grafico ad area a serie singola con mirino e valore al passaggio del mouse/tocco.
+// Un punto può avere un "dettaglio" (testo) mostrato sotto il valore.
 // punti: [{ id, etichetta, valore }] in ordine di tempo. compatto: senza asse né date (sparkline).
 export default function Area({ punti, formatta, altezza = 180, compatto = false, colore = 'var(--primario)' }) {
-  const [indice, setIndice] = useState(null)
+  const [indiceScelto, setIndice] = useState(null)
   const box = useRef(null)
+  // se i punti cambiano (es. altro periodo) un indice rimasto da prima può non esistere più
+  const indice = indiceScelto !== null && indiceScelto < punti.length ? indiceScelto : null
   if (punti.length < 2) return <p className="nota">Dati insufficienti per il grafico.</p>
 
   const valori = punti.map((p) => p.valore)
@@ -33,6 +36,7 @@ export default function Area({ punti, formatta, altezza = 180, compatto = false,
       {!compatto && (
         <p className="valore-area">
           <span className="nota">{scelto.etichetta}</span> <strong>{formatta(scelto.valore)}</strong>
+          {scelto.dettaglio && <span className="nota dettaglio-area">{scelto.dettaglio}</span>}
         </p>
       )}
       <div

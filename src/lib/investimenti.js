@@ -1,5 +1,9 @@
 import { euro, numero } from './numeri'
 
+// Tipologie di asset: al singolare per le schede, al plurale per il grafico della dashboard.
+export const tipologie = { azione: 'Azione', etf: 'ETF', obbligazione: 'Obbligazione', fondo: 'Fondo' }
+export const tipologiePlurale = { azione: 'Azioni', etf: 'ETF', obbligazione: 'Obbligazioni', fondo: 'Fondi' }
+
 // Le obbligazioni sono quotate in % del nominale: valore = quantità × prezzo / 100.
 export const fattore = (asset) => (asset?.quotazione === 'percentuale' ? 0.01 : 1)
 

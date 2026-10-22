@@ -3,8 +3,7 @@ import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
 import { inCentesimi, leggiNumero, numero, perCampo } from '../../lib/numeri'
-
-const tipologie = { azione: 'Azione', etf: 'ETF', obbligazione: 'Obbligazione', fondo: 'Fondo' }
+import { tipologie } from '../../lib/investimenti'
 
 const vuoto = {
   id: null,
