@@ -47,3 +47,20 @@ export const dataEstesa = (iso) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long' })
 
 export const dataBreve = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('it-IT')
+
+// Prima scadenza da oggi in poi partendo da una scadenza passata, con le stesse regole del
+// database: si avanza della frequenza, al giorno di riferimento (o all'ultimo giorno del mese).
+// Serve per riattivare ricorrenze e piani di accumulo senza recuperare le scadenze saltate.
+export function prossimaDaOggi(prossimaScadenza, frequenza, giornoRiferimento, oggi) {
+  let [a, m] = prossimaScadenza.split('-').map(Number)
+  const passo = frequenze[frequenza].mesi
+  const data = () => {
+    const ultimo = new Date(Date.UTC(a, m, 0)).getUTCDate()
+    return `${a}-${pad(m)}-${pad(Math.min(giornoRiferimento, ultimo))}`
+  }
+  while (data() < oggi) {
+    m += passo
+    while (m > 12) { m -= 12; a += 1 }
+  }
+  return data()
+}

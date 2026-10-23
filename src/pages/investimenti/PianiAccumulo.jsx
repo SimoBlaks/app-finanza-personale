@@ -3,28 +3,11 @@ import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
 import { euro, leggiImporto, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
-import { dataBreve, frequenze } from '../../lib/date'
+import { dataBreve, frequenze, prossimaDaOggi } from '../../lib/date'
 import { etichettaPrezzo, fattore, mostraPrezzo } from '../../lib/investimenti'
 
 // Piani di accumulo (PAC): a ogni scadenza il job notturno crea un acquisto per riga,
 // con prezzo stimato e l'etichetta "da verificare" (vedi DECISIONI.md).
-
-// Prima scadenza da oggi in poi, con le stesse regole del database
-// (giorno di riferimento; se il mese è più corto, l'ultimo giorno del mese).
-function prossimaDaOggi(p) {
-  const oggi = oggiISO()
-  let [a, m] = p.prossima_scadenza.split('-').map(Number)
-  const passo = frequenze[p.frequenza].mesi
-  const data = () => {
-    const ultimo = new Date(Date.UTC(a, m, 0)).getUTCDate()
-    return `${a}-${String(m).padStart(2, '0')}-${String(Math.min(p.giorno_riferimento, ultimo)).padStart(2, '0')}`
-  }
-  while (data() < oggi) {
-    m += passo
-    while (m > 12) { m -= 12; a += 1 }
-  }
-  return data()
-}
 
 const rigaVuota = { asset_id: '', modalita: 'importo', valore: '', prezzo_riferimento: '', spese: '' }
 
@@ -225,7 +208,7 @@ export function ElencoPiani({ piani, righe, asset, onApri, onCambia }) {
     const dati = { attivo: !p.attivo }
     // riattivando un piano sospeso, le scadenze saltate non vengono recuperate:
     // si riparte dalla prima scadenza da oggi in poi
-    if (!p.attivo && p.prossima_scadenza < oggiISO()) dati.prossima_scadenza = prossimaDaOggi(p)
+    if (!p.attivo && p.prossima_scadenza < oggiISO()) dati.prossima_scadenza = prossimaDaOggi(p.prossima_scadenza, p.frequenza, p.giorno_riferimento, oggiISO())
     const { error } = await supabase.from('piani_accumulo').update(dati).eq('id', p.id)
     if (error) return setErrore(messaggioErrore(error))
     onCambia()

@@ -78,7 +78,7 @@ export default function Transazioni() {
         </div>
   
         {scheda === 'ricorrenze' ? (
-          <Ricorrenze albero={albero} nomePersona={nomePersona} />
+          <Ricorrenze albero={albero} persone={persone} nomePersona={nomePersona} />
         ) : (
           <>
             <div className="azioni-pagina uguali">

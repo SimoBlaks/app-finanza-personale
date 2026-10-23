@@ -3,16 +3,18 @@ import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
 import { percorso } from '../../lib/categorie'
-import { euro } from '../../lib/numeri'
-import { dataBreve, frequenze } from '../../lib/date'
+import { euro, oggiISO } from '../../lib/numeri'
+import { dataBreve, frequenze, prossimaDaOggi } from '../../lib/date'
+import ModuloRicorrenza from './ModuloRicorrenza'
 
 const dataOra = (ts) =>
   new Date(ts).toLocaleString('it-IT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 
-export default function Ricorrenze({ albero, nomePersona }) {
+export default function Ricorrenze({ albero, persone, nomePersona }) {
   const [ricorrenze, setRicorrenze] = useState([])
   const [ultimaEsecuzione, setUltimaEsecuzione] = useState(null)
   const [errore, setErrore] = useState('')
+  const [inModifica, setInModifica] = useState(null)
   const conferma = useConferma()
 
   const carica = useCallback(async () => {
@@ -34,11 +36,23 @@ export default function Ricorrenze({ albero, nomePersona }) {
     carica()
   }
 
+  // Riattivando una ricorrenza ferma, le scadenze saltate non vengono recuperate:
+  // si riparte dalla prima scadenza da oggi in poi (come per i piani di accumulo).
+  function cambiaAttiva(r) {
+    const dati = { attiva: !r.attiva }
+    if (!r.attiva && r.prossima_scadenza < oggiISO())
+      dati.prossima_scadenza = prossimaDaOggi(r.prossima_scadenza, r.frequenza, r.giorno_riferimento, oggiISO())
+    esegui(supabase.from('transazioni_ricorrenti').update(dati).eq('id', r.id))
+  }
+
+  if (inModifica)
+    return <ModuloRicorrenza ricorrenza={inModifica} albero={albero} persone={persone} onFine={() => { setInModifica(null); carica() }} />
+
   return (
     <div>
       <p className="nota">
         Le transazioni ricorrenti vengono create in automatico ogni mattina, con la data della scadenza.
-        Disattivare o eliminare una ricorrenza non cancella le transazioni già create.
+        Disattivare, modificare o eliminare una ricorrenza non cambia le transazioni già create; riattivandola si riparte dalla prima scadenza da oggi in poi.
       </p>
       <p className={`stato-job ${ultimaEsecuzione?.esito === 'errore' ? 'errore' : ''}`}>
         {!ultimaEsecuzione
@@ -61,7 +75,8 @@ export default function Ricorrenze({ albero, nomePersona }) {
                 {!r.attiva && <span className="etichetta">non attiva</span>}
               </span>
               <span className="riga-azioni">
-                <button className="piccolo" onClick={() => esegui(supabase.from('transazioni_ricorrenti').update({ attiva: !r.attiva }).eq('id', r.id))}>
+                <button className="piccolo" onClick={() => setInModifica(r)}>Modifica</button>
+                <button className="piccolo" onClick={() => cambiaAttiva(r)}>
                   {r.attiva ? 'Disattiva' : 'Riattiva'}
                 </button>
                 <button
