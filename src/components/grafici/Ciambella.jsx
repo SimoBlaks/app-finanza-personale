@@ -15,7 +15,7 @@ function arco(inizio, fine) {
   return `M ${x1} ${y1} A ${R} ${R} 0 ${grande} 1 ${x2} ${y2}`
 }
 
-// Grafico a ciambella con legenda. voci: [{ id, etichetta, valore, colore }].
+// Grafico a ciambella con legenda. voci: [{ id, etichetta, valore, colore, extra? }] (extra: riga sotto il nome).
 // Al centro il totale (o la voce sotto il puntatore); onScegli rende cliccabili fette e legenda.
 export default function Ciambella({ voci, formatta, titoloCentro = 'Totale', onScegli, scegliibile = () => true }) {
   const [attiva, setAttiva] = useState(null)
@@ -83,7 +83,7 @@ export default function Ciambella({ voci, formatta, titoloCentro = 'Totale', onS
           const contenuto = (
             <>
               <span className="pallino" style={{ background: f.colore }} />
-              <span className="legenda-nome">{f.etichetta}</span>
+              <span className="legenda-nome">{f.etichetta}{f.extra}</span>
               <span className="legenda-valore">{formatta(f.valore)}</span>
               <span className="legenda-quota">{percento(f.quota)}</span>
             </>

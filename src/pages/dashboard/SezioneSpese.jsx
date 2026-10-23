@@ -7,6 +7,7 @@ import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Colonne from '../../components/grafici/Colonne'
 import Ciambella from '../../components/grafici/Ciambella'
 import { COLORE_ALTRO, mappaColori } from '../../components/grafici/colori'
+import Variazione from '../../components/Variazione'
 
 const NESSUNA = 'nessuna'
 const nomeMeseBreve = (m) => new Date(2026, m, 15).toLocaleDateString('it-IT', { month: 'short' }).replace('.', '')
@@ -23,15 +24,25 @@ function raggruppa(spese, chiave, nome) {
     .sort((a, b) => b.valore - a.valore)
 }
 
+const somma = (righe) => righe.reduce((t, s) => t + inCentesimi(String(s.quota_personale)), 0) / 100
+
 // Spese o entrate per categoria (SPEC 3.2): vista mese o anno, con discesa macro → categoria → micro.
 const tipi = { spesa: { titolo: 'Spese', singolare: 'spesa' }, incasso: { titolo: 'Entrate', singolare: 'entrata' } }
+
+// Confronto con un altro periodo (vedi DECISIONI.md): nella vista Anno c'è solo l'anno precedente.
+const confronti = {
+  mese: { '': 'Nessun confronto', precedente: 'Mese precedente', annoScorso: "Stesso mese dell'anno scorso", media: 'Media dei 12 mesi precedenti' },
+  anno: { '': 'Nessun confronto', precedente: 'Anno precedente' },
+}
 
 export default function SezioneSpese({ albero, meseIniziale }) {
   const [tipo, setTipo] = useState('spesa')
   const [vista, setVista] = useState('mese')
   const [mese, setMese] = useState(() => meseIniziale ?? meseCorrente())
   const [filtro, setFiltro] = useState({}) // { macroId, catId, microId }
-  const [spese, setSpese] = useState([])
+  const [confronto, setConfronto] = useState('')
+  // anno scelto e anno precedente: tutti i confronti (anche la media di 12 mesi) cadono in questo intervallo
+  const [righe, setRighe] = useState([])
   const [errore, setErrore] = useState('')
   const anno = mese.slice(0, 4)
 
@@ -40,27 +51,49 @@ export default function SezioneSpese({ albero, meseIniziale }) {
       .from('transazioni')
       .select('id, data, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
       .eq('tipo', tipo)
-      .gte('data', `${anno}-01-01`)
+      .gte('data', `${Number(anno) - 1}-01-01`)
       .lte('data', `${anno}-12-31`)
       .order('data', { ascending: false })
-      .then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setSpese(data)))
+      .then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setRighe(data)))
   }, [anno, tipo])
 
+  const spese = useMemo(() => righe.filter((s) => s.data.startsWith(anno)), [righe, anno])
   const nome = (id, vuoto) => (id === NESSUNA ? vuoto : albero.mappa[id]?.nome ?? '?')
 
-  // spese dell'anno che rispettano il filtro di categoria
-  const perCategoria = useMemo(
-    () =>
-      spese.filter(
-        (s) =>
-          (!filtro.macroId || s.macrocategoria_id === filtro.macroId) &&
-          (!filtro.catId || (s.categoria_id ?? NESSUNA) === filtro.catId) &&
-          (!filtro.microId || (s.microcategoria_id ?? NESSUNA) === filtro.microId),
-      ),
-    [spese, filtro],
-  )
+  // righe che rispettano il filtro di categoria
+  const conFiltro = (elenco) =>
+    elenco.filter(
+      (s) =>
+        (!filtro.macroId || s.macrocategoria_id === filtro.macroId) &&
+        (!filtro.catId || (s.categoria_id ?? NESSUNA) === filtro.catId) &&
+        (!filtro.microId || (s.microcategoria_id ?? NESSUNA) === filtro.microId),
+    )
+  const perCategoria = useMemo(() => conFiltro(spese), [spese, filtro])
   const delPeriodo = vista === 'mese' ? perCategoria.filter((s) => s.data.startsWith(mese)) : perCategoria
-  const totale = delPeriodo.reduce((t, s) => t + inCentesimi(String(s.quota_personale)), 0) / 100
+  const totale = somma(delPeriodo)
+
+  // Periodo di confronto: righe (con lo stesso filtro), per quanto dividere (media) e come chiamarlo.
+  const sceltaConfronto = confronti[vista][confronto] ? confronto : ''
+  let paragone = null
+  if (sceltaConfronto) {
+    const tutte = conFiltro(righe)
+    if (vista === 'anno') {
+      const prima = String(Number(anno) - 1)
+      paragone = { righe: tutte.filter((s) => s.data.startsWith(prima)), divisore: 1, nome: prima }
+    } else if (sceltaConfronto === 'media') {
+      const mesi = Array.from({ length: 12 }, (_, i) => spostaMese(mese, -(i + 1)))
+      paragone = { righe: tutte.filter((s) => mesi.includes(s.data.slice(0, 7))), divisore: 12, nome: 'la media dei 12 mesi precedenti' }
+    } else {
+      const altro = spostaMese(mese, sceltaConfronto === 'precedente' ? -1 : -12)
+      paragone = { righe: tutte.filter((s) => s.data.startsWith(altro)), divisore: 1, nome: nomeMese(altro) }
+    }
+  }
+  // valore di confronto per una voce del livello mostrato (macro, categoria o micro)
+  const campoLivello = !filtro.macroId ? 'macrocategoria_id' : !filtro.catId ? 'categoria_id' : 'microcategoria_id'
+  const valorePrima = (ids) =>
+    paragone ? somma(paragone.righe.filter((s) => ids.includes(s[campoLivello] ?? NESSUNA))) / paragone.divisore : 0
+  const conVariazione = (v, ids = [v.id]) =>
+    paragone ? { ...v, extra: <Variazione attuale={v.valore} prima={valorePrima(ids)} tipo={tipo} /> } : v
 
   // Colore fisso per macrocategoria, deciso sulle spese dell'intero anno:
   // le 7 più grandi hanno un colore proprio, le altre finiscono in "Altro".
@@ -80,15 +113,18 @@ export default function SezioneSpese({ albero, meseIniziale }) {
     const perMacro = raggruppa(perBarre, 'macrocategoria_id', (id) => nome(id))
     const conColore = perMacro.filter((v) => colori.get(v.id) !== COLORE_ALTRO)
     const altre = perMacro.filter((v) => colori.get(v.id) === COLORE_ALTRO)
-    fette = conColore.map((v) => ({ ...v, colore: colori.get(v.id) }))
-    if (altre.length) fette.push({ id: 'altro', etichetta: `Altro (${altre.map((a) => a.etichetta).join(', ')})`, valore: altre.reduce((t, a) => t + a.valore, 0), colore: COLORE_ALTRO })
+    fette = conColore.map((v) => conVariazione({ ...v, colore: colori.get(v.id) }))
+    if (altre.length) {
+      const altro = { id: 'altro', etichetta: `Altro (${altre.map((a) => a.etichetta).join(', ')})`, valore: altre.reduce((t, a) => t + a.valore, 0), colore: COLORE_ALTRO }
+      fette.push(conVariazione(altro, altre.map((a) => a.id)))
+    }
     barre = []
     scegli = (v) => setFiltro({ macroId: v.id })
   } else if (!filtro.catId) {
-    barre = raggruppa(perBarre, 'categoria_id', (id) => nome(id, 'Senza categoria'))
+    barre = raggruppa(perBarre, 'categoria_id', (id) => nome(id, 'Senza categoria')).map((v) => conVariazione(v))
     scegli = (v) => setFiltro({ ...filtro, catId: v.id })
   } else if (filtro.catId !== NESSUNA) {
-    barre = raggruppa(perBarre, 'microcategoria_id', (id) => nome(id, 'Senza microcategoria'))
+    barre = raggruppa(perBarre, 'microcategoria_id', (id) => nome(id, 'Senza microcategoria')).map((v) => conVariazione(v))
     scegli = filtro.microId ? null : (v) => setFiltro({ ...filtro, microId: v.id })
   } else {
     barre = []
@@ -96,8 +132,7 @@ export default function SezioneSpese({ albero, meseIniziale }) {
 
   const colonne = Array.from({ length: 12 }, (_, i) => {
     const am = `${anno}-${String(i + 1).padStart(2, '0')}`
-    const c = perCategoria.filter((s) => s.data.startsWith(am)).reduce((t, s) => t + inCentesimi(String(s.quota_personale)), 0)
-    return { id: am, etichetta: nomeMeseBreve(i), etichettaLunga: nomeMese(am), valore: c / 100 }
+    return { id: am, etichetta: nomeMeseBreve(i), etichettaLunga: nomeMese(am), valore: somma(perCategoria.filter((s) => s.data.startsWith(am))) }
   })
 
   const briciole = [
@@ -110,10 +145,12 @@ export default function SezioneSpese({ albero, meseIniziale }) {
   // cambiando tra spese ed entrate si riparte da "Tutte" le categorie
   function cambiaTipo(k) {
     if (k === tipo) return
-    setSpese([])
+    setRighe([])
     setFiltro({})
     setTipo(k)
   }
+
+  const totalePrima = paragone ? somma(paragone.righe) / paragone.divisore : 0
 
   return (
     <div className="scheda sezione-spese">
@@ -133,6 +170,12 @@ export default function SezioneSpese({ albero, meseIniziale }) {
         <strong>{vista === 'mese' ? nomeMese(mese) : anno}</strong>
         <button className="piccolo" onClick={() => setMese((m) => spostaMese(m, vista === 'mese' ? 1 : 12))} aria-label="Periodo successivo">›</button>
       </div>
+      <label className="scelta-confronto">
+        Confronta con
+        <select value={sceltaConfronto} onChange={(e) => setConfronto(e.target.value)}>
+          {Object.entries(confronti[vista]).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+        </select>
+      </label>
       {errore && <p className="errore">{errore}</p>}
 
       <nav className="briciole" aria-label="Filtro categoria">
@@ -146,8 +189,14 @@ export default function SezioneSpese({ albero, meseIniziale }) {
           ),
         )}
       </nav>
+      {paragone && (
+        <p className="totale-confronto">
+          Totale <strong>{euro(totale)}</strong> rispetto a {euro(totalePrima)} ({paragone.nome}):{' '}
+          <Variazione attuale={totale} prima={totalePrima} tipo={tipo} />
+        </p>
+      )}
       {/* con la ciambella il totale è già al centro: si mostra solo scendendo nelle categorie */}
-      {!fette?.length && delPeriodo.length > 0 && <p className="totale-periodo">Totale (tua quota): <strong>{euro(totale)}</strong></p>}
+      {!paragone && !fette?.length && delPeriodo.length > 0 && <p className="totale-periodo">Totale (tua quota): <strong>{euro(totale)}</strong></p>}
 
       {vista === 'anno' && (
         <Colonne

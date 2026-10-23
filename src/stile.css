@@ -623,3 +623,11 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 .elenco-doppioni { margin: 0.4rem 0; padding-left: 1.1rem; color: var(--testo); white-space: normal; }
 .elenco-doppioni li { margin: 0.2rem 0; }
 .dialogo-testo p { margin: 0; }
+/* Spese/Entrate: confronto con un altro periodo (riga sotto il nome di ogni voce) */
+.scelta-confronto { flex-direction: row; align-items: center; gap: 0.5rem; margin: 0 0 0.5rem; font-size: 0.85rem; }
+.scelta-confronto select { flex: 1; min-width: 0; min-height: 36px; padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+.variazione-voce { display: block; font-size: 0.75rem; font-weight: 600; color: var(--testo-tenue); white-space: nowrap; }
+.variazione-voce.peggio { color: var(--pericolo); }
+.variazione-voce.meglio { color: var(--successo); }
+.totale-confronto { margin: 0 0 0.75rem; font-size: 0.9rem; }
+.totale-confronto .variazione-voce { display: inline; font-size: 0.9rem; }
