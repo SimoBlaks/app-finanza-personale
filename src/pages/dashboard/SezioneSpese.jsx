@@ -7,6 +7,7 @@ import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Colonne from '../../components/grafici/Colonne'
 import Ciambella from '../../components/grafici/Ciambella'
 import { COLORE_ALTRO, mappaColori } from '../../components/grafici/colori'
+import { tutteLeRighe } from '../../lib/righe'
 import Variazione from '../../components/Variazione'
 
 const NESSUNA = 'nessuna'
@@ -47,15 +48,18 @@ export default function SezioneSpese({ albero, meseIniziale }) {
   const anno = mese.slice(0, 4)
 
   useEffect(() => {
-    supabase
-      .from('transazioni')
-      .select('id, data, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
-      .eq('tipo', tipo)
-      .gte('data', `${Number(anno) - 1}-01-01`)
-      // le programmate (data futura) contano solo dal loro giorno
-      .lte('data', [`${anno}-12-31`, oggiISO()].sort()[0])
-      .order('data', { ascending: false })
-      .then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setRighe(data)))
+    // due anni di movimenti possono superare le 1000 righe: si leggono a pagine
+    tutteLeRighe(() =>
+      supabase
+        .from('transazioni')
+        .select('id, data, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
+        .eq('tipo', tipo)
+        .gte('data', `${Number(anno) - 1}-01-01`)
+        // le programmate (data futura) contano solo dal loro giorno
+        .lte('data', [`${anno}-12-31`, oggiISO()].sort()[0])
+        .order('data', { ascending: false })
+        .order('id'),
+    ).then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setRighe(data)))
   }, [anno, tipo])
 
   const spese = useMemo(() => righe.filter((s) => s.data.startsWith(anno)), [righe, anno])

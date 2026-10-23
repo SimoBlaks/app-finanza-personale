@@ -8,6 +8,7 @@ import { caricaAlbero } from '../../lib/categorie'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
 import { tipologiePlurale } from '../../lib/investimenti'
 import { liquiditaMensile, patrimonioMensile } from '../../lib/patrimonio'
+import { tutteLeRighe } from '../../lib/righe'
 import InterruttoreCifre from '../../components/Riservatezza'
 import Area from '../../components/grafici/Area'
 import Ciambella from '../../components/grafici/Ciambella'
@@ -53,9 +54,9 @@ export default function Dashboard() {
       supabase.from('esecuzioni_job').select('*').eq('job', 'ricorrenze').order('eseguito_il', { ascending: false }).limit(1).maybeSingle(),
       caricaAlbero(),
       supabase.from('riepilogo_mensile').select('mese, entrate, uscite, movimento_liquidita').order('mese'),
-      // per il patrimonio nel tempo
-      supabase.from('operazioni_investimento').select('asset_id, data, tipo, quantita, prezzo, spese, created_at'),
-      supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura'),
+      // per il patrimonio nel tempo (operazioni e prezzi crescono negli anni: letti a pagine)
+      tutteLeRighe(() => supabase.from('operazioni_investimento').select('id, asset_id, data, tipo, quantita, prezzo, spese, created_at, quantita_residua, costo_residuo').order('id')),
+      tutteLeRighe(() => supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura').order('data').order('asset_id')),
       supabase.from('transazioni').select('data, pagata_da, importo_totale, quota_personale').eq('condivisa', true),
       supabase.from('pagamenti_saldo').select('data, direzione, importo'),
     ])

@@ -10,21 +10,11 @@ import { liquiditaMensile, patrimonioMensile } from '../../lib/patrimonio'
 import ColonneDoppie from '../../components/grafici/ColonneDoppie'
 import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Variazione from '../../components/Variazione'
+import { tutteLeRighe } from '../../lib/righe'
 
 const meseBreve = (am) => new Date(`${am}-15T12:00:00`).toLocaleDateString('it-IT', { month: 'short' }).replace('.', '')
 const cent = (v) => inCentesimi(String(v ?? 0))
 const percento = (x) => `${x.toLocaleString('it-IT', { maximumFractionDigits: 1, useGrouping: 'always' })}%`
-
-// Tutte le righe di una richiesta, a pagine da 1000 (il limite delle API).
-async function tutteLeRighe(richiesta) {
-  const righe = []
-  for (let da = 0; ; da += 1000) {
-    const { data, error } = await richiesta().range(da, da + 999)
-    if (error) return { error }
-    righe.push(...data)
-    if (data.length < 1000) return { data: righe }
-  }
-}
 
 // Riepilogo di un anno (vedi DECISIONI.md): entrate, uscite e risparmio confrontati con l'anno prima,
 // mese per mese, categorie e spese principali, investimenti e spese condivise.
@@ -40,8 +30,8 @@ export default function Riepilogo() {
         supabase.from('liquidita').select('*').maybeSingle(),
         supabase.from('riepilogo_mensile').select('mese, movimento_liquidita').order('mese'),
         supabase.from('asset').select('*'),
-        supabase.from('operazioni_investimento').select('*'),
-        supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura'),
+        tutteLeRighe(() => supabase.from('operazioni_investimento').select('*').order('id')),
+        tutteLeRighe(() => supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura').order('data').order('asset_id')),
         supabase.from('transazioni').select('data, pagata_da, importo_totale, quota_personale').eq('condivisa', true),
         supabase.from('pagamenti_saldo').select('data, direzione, importo, persona_id'),
         supabase.from('proventi_investimento').select('asset_id, data, importo_netto, tasse'),

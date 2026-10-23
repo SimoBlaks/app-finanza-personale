@@ -1,6 +1,7 @@
 import { supabase } from '../supabase'
 import { caricaAlbero } from './categorie'
 import { oggiISO } from './numeri'
+import { tutteLeRighe } from './righe'
 
 // Export in Excel nello stesso formato del file usato per l'importazione:
 // un foglio per anno (Data, Uscita, Entrata, Descrizione, Macrocategoria,
@@ -18,13 +19,9 @@ const virgola = (n) => Number(n).toLocaleString('it-IT', { minimumFractionDigits
 
 // Legge tutte le righe di una tabella a pagine da 1000 (limite delle API).
 async function leggiTutto(costruisci) {
-  const righe = []
-  for (let da = 0; ; da += 1000) {
-    const { data, error } = await costruisci().range(da, da + 999)
-    if (error) throw error
-    righe.push(...data)
-    if (data.length < 1000) return righe
-  }
+  const { data, error } = await tutteLeRighe(costruisci)
+  if (error) throw error
+  return data
 }
 
 function intestazione(foglio, titoli, larghezze) {
