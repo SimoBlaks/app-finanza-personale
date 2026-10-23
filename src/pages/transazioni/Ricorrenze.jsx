@@ -88,6 +88,11 @@ export default function Ricorrenze({ albero, persone, nomePersona }) {
                   Elimina
                 </button>
               </span>
+              {!r.attiva && (
+                <span className="nota">
+                  Riattivandola, le transazioni delle scadenze già passate non verranno create: si riparte dalla prima scadenza da oggi in poi.
+                </span>
+              )}
             </span>
             <span className={`importo ${r.tipo}`}>{r.tipo === 'incasso' ? '+' : '−'}{euro(r.quota_personale)}</span>
           </div>
