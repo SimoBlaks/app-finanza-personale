@@ -54,6 +54,47 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
       return daScorciatoia ? { ...x, nota: s.nota ?? '' } : x
     })
   }
+  // Categoria suggerita dalla nota: cerca le registrazioni passate con una nota simile e propone
+  // le categorie usate più spesso. Solo per le nuove e finché la categoria non è scelta; decide l'utente.
+  const [suggerimenti, setSuggerimenti] = useState([])
+  const testoNota = f.nota.trim()
+  const senzaCategoria = !f.categoria.macroId
+  useEffect(() => {
+    if (!nuova || !senzaCategoria || testoNota.length < 3) return setSuggerimenti([])
+    let annullata = false
+    const attesa = setTimeout(async () => {
+      const cerca = testoNota.replace(/[\\%_]/g, (c) => `\\${c}`)
+      const { data } = await supabase
+        .from('transazioni')
+        .select('tipo, macrocategoria_id, categoria_id, microcategoria_id')
+        .ilike('nota', `%${cerca}%`)
+        .order('data', { ascending: false })
+        .limit(100)
+      if (annullata || !data) return
+      const conteggi = new Map()
+      for (const t of data) {
+        const chiave = [t.tipo, t.macrocategoria_id, t.categoria_id, t.microcategoria_id].join('|')
+        const voce = conteggi.get(chiave) ?? { ...t, volte: 0 }
+        voce.volte += 1
+        conteggi.set(chiave, voce)
+      }
+      // solo categorie ancora attive, le due più usate
+      const attiva = (id) => !id || albero.mappa[id]?.attiva
+      setSuggerimenti(
+        [...conteggi.values()]
+          .filter((v) => attiva(v.macrocategoria_id) && attiva(v.categoria_id) && attiva(v.microcategoria_id))
+          .sort((x, y) => y.volte - x.volte)
+          .slice(0, 2),
+      )
+    }, 400)
+    return () => { annullata = true; clearTimeout(attesa) }
+  }, [nuova, senzaCategoria, testoNota, albero])
+
+  const usaSuggerimento = (s) => {
+    imposta('tipo', s.tipo)
+    imposta('categoria', { macroId: s.macrocategoria_id, catId: s.categoria_id, microId: s.microcategoria_id })
+  }
+
   const scorciatoiaScelta = (s) =>
     f.tipo === s.tipo && f.categoria.macroId === s.macrocategoria_id &&
     (f.categoria.catId ?? null) === s.categoria_id && (f.categoria.microId ?? null) === s.microcategoria_id
@@ -194,6 +235,20 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
         <label>Data<input type="date" value={f.data} onChange={(e) => imposta('data', e.target.value)} /></label>
       </div>
       <label>Nota<input value={f.nota} onChange={(e) => imposta('nota', e.target.value)} placeholder="Descrizione (facoltativa)" /></label>
+      {senzaCategoria && suggerimenti.length > 0 && (
+        <div className="suggerimenti-categoria">
+          <span className="nota">Categoria usata altre volte con questa nota:</span>
+          <div className="pulsanti-scelta">
+            {suggerimenti.map((s) => (
+              <button type="button" key={[s.tipo, s.macrocategoria_id, s.categoria_id, s.microcategoria_id].join('|')} className={`piccolo ${s.tipo}`} onClick={() => usaSuggerimento(s)}>
+                {s.tipo !== f.tipo && `${tipiTransazione[s.tipo]} · `}
+                {percorso(albero, s.macrocategoria_id, s.categoria_id, s.microcategoria_id)}
+                <span className="volte"> ({s.volte} {s.volte === 1 ? 'volta' : 'volte'})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <span className="etichetta-campo">Categoria</span>

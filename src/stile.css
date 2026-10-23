@@ -614,7 +614,12 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 .riga-inflazione { display: flex; align-items: flex-end; gap: 0.5rem; margin-top: 0.9rem; }
 .riga-inflazione label { flex: 1; }
 .riga-inflazione + .nota { margin: 0.3rem 0 0; font-size: 0.8rem; }
-/* Nuova transazione: avviso di possibile doppione */
+/* Nuova transazione: categoria suggerita dalla nota e avviso di possibile doppione */
+.suggerimenti-categoria { display: flex; flex-direction: column; gap: 0.35rem; margin-top: -0.35rem; }
+.suggerimenti-categoria .nota { margin: 0; font-size: 0.82rem; }
+.suggerimenti-categoria button { border-color: var(--primario); color: var(--primario); }
+.suggerimenti-categoria button.incasso { border-color: var(--successo); color: var(--successo); }
+.suggerimenti-categoria .volte { color: var(--testo-tenue); font-weight: 400; }
 .elenco-doppioni { margin: 0.4rem 0; padding-left: 1.1rem; color: var(--testo); white-space: normal; }
 .elenco-doppioni li { margin: 0.2rem 0; }
 .dialogo-testo p { margin: 0; }

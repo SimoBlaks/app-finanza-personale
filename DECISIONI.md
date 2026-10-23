@@ -133,3 +133,9 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 
 - Portafoglio bianco con chiusura dorata su sfondo verde-petrolio sfumato, con due carte (menta e oro, con banda magnetica) inclinate verso destra di cui spunta solo un angolo.
 - I PNG (192, 512, 512 "maskable" con il disegno ridotto all'80%, 180 per iPhone, 32 per la scheda del browser) si rigenerano con `node scripts/genera-icone.mjs`, senza dipendenze. I nomi dei file sono nuovi rispetto alla prima icona, così browser e telefoni non riusano quelle vecchie in memoria.
+
+## 2026-10-23 · Nuova transazione: doppioni e categoria suggerita
+
+- **Possibile doppione**: salvando una transazione nuova, se ne esiste già una con lo stesso tipo e lo stesso importo a meno di 3 giorni di distanza, l'app la mostra e chiede "Salva comunque". Non blocca nulla e non vale per le modifiche.
+- **Categoria suggerita**: scrivendo la nota (almeno 3 lettere) di una transazione nuova senza categoria, l'app cerca le registrazioni passate con una nota simile e propone le due categorie usate più spesso (con tipo e numero di volte). Si applicano solo toccandole; le categorie archiviate non vengono proposte.
+- Niente automatismi che creano o stimano dati (es. cedole e dividendi automatici): si è scelto di registrarli a mano.
