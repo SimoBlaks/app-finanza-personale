@@ -72,3 +72,19 @@ export function patrimonioMensile({ liquidita, asset, operazioni, prezzi, condiv
     }
   })
 }
+
+// Liquidità a fine mese, dal mese del saldo iniziale a oggi: saldo iniziale + movimenti cumulati
+// (vista riepilogo_mensile). Restituisce [{ id: 'AAAA-MM', valore }].
+export function liquiditaMensile(liquidita, mensile, meseOggi) {
+  const perMese = new Map(mensile.map((m) => [m.mese.slice(0, 7), Number(m.movimento_liquidita ?? 0)]))
+  const inizio = liquidita?.data_saldo_iniziale?.slice(0, 7) ?? mensile[0]?.mese.slice(0, 7) ?? meseOggi
+  const risultato = []
+  let cumulato = Number(liquidita?.saldo_iniziale ?? 0)
+  for (let am = inizio; am <= meseOggi; ) {
+    cumulato += perMese.get(am) ?? 0
+    risultato.push({ id: am, valore: cumulato })
+    const [a, m] = am.split('-').map(Number)
+    am = m === 12 ? `${a + 1}-01` : `${a}-${String(m + 1).padStart(2, '0')}`
+  }
+  return risultato
+}

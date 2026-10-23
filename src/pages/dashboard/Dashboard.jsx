@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { euro, numero, oggiISO } from '../../lib/numeri'
-import { aggiungiMesi, meseCorrente, nomeMese } from '../../lib/date'
+import { meseCorrente, nomeMese } from '../../lib/date'
 import { caricaAlbero } from '../../lib/categorie'
 import { caricaImpostazioni, caricaUltimiPrezzi, valuta } from '../../lib/prezzi'
 import { tipologiePlurale } from '../../lib/investimenti'
-import { patrimonioMensile } from '../../lib/patrimonio'
+import { liquiditaMensile, patrimonioMensile } from '../../lib/patrimonio'
 import InterruttoreCifre from '../../components/Riservatezza'
 import Area from '../../components/grafici/Area'
 import Ciambella from '../../components/grafici/Ciambella'
@@ -75,14 +75,8 @@ export default function Dashboard() {
   const serie = useMemo(() => {
     if (!d) return null
     const perMese = new Map(d.mensile.map((m) => [m.mese.slice(0, 7), m]))
-    const inizio = d.liquidita?.data_saldo_iniziale?.slice(0, 7) ?? d.mensile[0]?.mese.slice(0, 7) ?? meseCorrente()
-    const mesi = []
-    for (let am = inizio; am <= meseCorrente(); am = aggiungiMesi(`${am}-01`, 1).slice(0, 7)) mesi.push(am)
-    let cumulato = Number(d.liquidita?.saldo_iniziale ?? 0)
-    const liquidita = mesi.map((am) => {
-      cumulato += Number(perMese.get(am)?.movimento_liquidita ?? 0)
-      return { id: am, etichetta: meseEAnno(am), valore: cumulato }
-    })
+    const liquidita = liquiditaMensile(d.liquidita, d.mensile, meseCorrente()).map((m) => ({ ...m, etichetta: meseEAnno(m.id) }))
+    const mesi = liquidita.map((m) => m.id)
     // entrate e uscite di tutti i mesi: il riquadro ne mostra 12 alla volta
     const entrateUscite = mesi.map((am) => {
       const m = perMese.get(am)
@@ -196,6 +190,7 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+        <Link to="/riepilogo" className="link-riepilogo">Riepilogo dell'anno ›</Link>
       </div>
 
       {/* colonna sinistra su schermi larghi: spese/entrate, poi risparmio ed entrate-uscite */}

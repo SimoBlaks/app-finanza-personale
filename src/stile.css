@@ -631,3 +631,17 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 .variazione-voce.meglio { color: var(--successo); }
 .totale-confronto { margin: 0 0 0.75rem; font-size: 0.9rem; }
 .totale-confronto .variazione-voce { display: inline; font-size: 0.9rem; }
+/* Riepilogo dell'anno */
+.link-riepilogo { display: inline-block; margin-top: 0.75rem; color: var(--primario); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+.link-riepilogo:hover { text-decoration: underline; }
+.piccolo-link { color: var(--primario); font-size: 0.9rem; text-decoration: none; }
+.riepilogo h1 { margin-bottom: 0.5rem; }
+.riepilogo-kpi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.6rem; margin-bottom: 0.5rem; }
+@media (min-width: 700px) { .riepilogo-kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.riepilogo-kpi .scheda { margin: 0; padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.riepilogo-kpi .nota { margin: 0; }
+.riepilogo-kpi .importo { font-size: 1.15rem; }
+.riepilogo-kpi .variazione-voce { white-space: normal; }
+.riquadro-persona { padding: 0.5rem 0; border-bottom: 1px solid var(--bordo); }
+.riquadro-persona:last-child { border-bottom: none; }
+.fino-a-oggi { text-transform: none; font-weight: 400; color: var(--testo-tenue); }

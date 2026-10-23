@@ -12,6 +12,7 @@ import Asset from './pages/impostazioni/Asset'
 import Generali from './pages/impostazioni/Generali'
 import Esporta from './pages/impostazioni/Esporta'
 import Scorciatoie from './pages/impostazioni/Scorciatoie'
+import Riepilogo from './pages/riepilogo/Riepilogo'
 
 function SoloAutenticato({ children }) {
   const sessione = useSessione()
@@ -35,6 +36,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="transazioni" element={<Transazioni />} />
         <Route path="investimenti" element={<Investimenti />} />
+        <Route path="riepilogo" element={<Riepilogo />} />
         <Route path="impostazioni" element={<Impostazioni />}>
           <Route index element={<Navigate to="categorie" replace />} />
           <Route path="categorie" element={<Categorie />} />

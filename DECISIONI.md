@@ -139,3 +139,9 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - **Possibile doppione**: salvando una transazione nuova, se ne esiste già una con lo stesso tipo e lo stesso importo a meno di 3 giorni di distanza, l'app la mostra e chiede "Salva comunque". Non blocca nulla e non vale per le modifiche.
 - **Categoria suggerita**: scrivendo la nota (almeno 3 lettere) di una transazione nuova senza categoria, l'app cerca le registrazioni passate con una nota simile e propone le due categorie usate più spesso (con tipo e numero di volte). Si applicano solo toccandole; le categorie archiviate non vengono proposte.
 - Niente automatismi che creano o stimano dati (es. cedole e dividendi automatici): si è scelto di registrarli a mano.
+
+## 2026-10-23 · Dashboard: confronti e riepilogo dell'anno
+
+- "Entrate e uscite" mostra 12 mesi alla volta e si scorre con ‹ › di un mese.
+- Nel riquadro Spese/Entrate, **"Confronta con"**: mese precedente, stesso mese dell'anno scorso, media dei 12 mesi precedenti (vista Anno: anno precedente). Sotto ogni voce e sul totale la differenza in € e %, rossa se peggiora (spese che salgono, entrate che scendono), verde se migliora.
+- Pagina **Riepilogo dell'anno** (link dalla dashboard), con ‹ › dal primo anno dei dati a oggi: entrate, uscite, risparmio e tasso di risparmio confrontati con l'anno prima (la variazione del tasso è in punti percentuali), patrimonio da fine anno precedente a fine anno (stessa regola del grafico), mese per mese, prime 10 categorie di spesa, 5 spese più grandi, investimenti (versato, incassato, plus/minusvalenze, dividendi, tasse) e spese condivise per persona. Per l'anno in corso i dati arrivano a oggi e il confronto è con l'anno precedente intero.
