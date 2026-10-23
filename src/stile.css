@@ -450,8 +450,11 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .variazione.su { color: var(--successo); }
 .variazione.giu { color: var(--pericolo); }
 .patrimonio-sparkline { min-width: 0; }
-.riquadri { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 1rem; }
-@media (min-width: 700px) { .riquadri { grid-template-columns: repeat(4, 1fr); } }
+.riquadri { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.6rem; margin-top: 1rem; }
+@media (min-width: 700px) { .riquadri { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* telefoni stretti: i riquadri restano dentro la scheda anche con cifre lunghe */
+.riquadro-kpi { min-width: 0; }
+.riquadro-kpi > span:not(.icona-kpi), .riquadro-kpi .kpi-valore { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .riquadro-kpi { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 0.6rem; align-items: center; padding: 0.7rem 0.8rem; border-radius: var(--raggio); background: var(--superficie); border: 1px solid var(--bordo); }
 .icona-kpi { grid-row: span 2; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 .riquadro-kpi.liquidita .icona-kpi { background: color-mix(in srgb, var(--serie-1) 15%, transparent); color: var(--serie-1); }
@@ -645,3 +648,8 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 .riquadro-persona { padding: 0.5rem 0; border-bottom: 1px solid var(--bordo); }
 .riquadro-persona:last-child { border-bottom: none; }
 .fino-a-oggi { text-transform: none; font-weight: 400; color: var(--testo-tenue); }
+/* Telefoni stretti: nei riquadri del patrimonio l'icona va sopra, così la cifra ha tutta la larghezza */
+@media (max-width: 420px) {
+  .riquadro-kpi { grid-template-columns: minmax(0, 1fr); padding: 0.6rem 0.7rem; }
+  .icona-kpi { grid-row: auto; width: 28px; height: 28px; border-radius: 8px; margin-bottom: 0.35rem; }
+}
