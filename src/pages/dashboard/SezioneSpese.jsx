@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, inCentesimi } from '../../lib/numeri'
+import { euro, inCentesimi, oggiISO } from '../../lib/numeri'
 import { meseCorrente, nomeMese, spostaMese } from '../../lib/date'
 import BarreOrizzontali from '../../components/grafici/BarreOrizzontali'
 import Colonne from '../../components/grafici/Colonne'
@@ -52,7 +52,8 @@ export default function SezioneSpese({ albero, meseIniziale }) {
       .select('id, data, quota_personale, macrocategoria_id, categoria_id, microcategoria_id')
       .eq('tipo', tipo)
       .gte('data', `${Number(anno) - 1}-01-01`)
-      .lte('data', `${anno}-12-31`)
+      // le programmate (data futura) contano solo dal loro giorno
+      .lte('data', [`${anno}-12-31`, oggiISO()].sort()[0])
       .order('data', { ascending: false })
       .then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setRighe(data)))
   }, [anno, tipo])

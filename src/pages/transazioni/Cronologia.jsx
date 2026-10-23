@@ -153,7 +153,9 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
     let entrate = 0
     let uscite = 0
     for (let da = 0; ; da += 1000) {
-      const { data, error } = await filtraTransazioni(supabase.from('transazioni').select('tipo, quota_personale'), filtri, albero)
+      let q = filtraTransazioni(supabase.from('transazioni').select('tipo, quota_personale'), filtri, albero)
+      if (!filtri.future) q = q.lte('data', oggiISO())
+      const { data, error } = await q
         .order('id').range(da, da + 999)
       if (error) return setTotali(null)
       for (const v of data) {
@@ -215,9 +217,9 @@ export default function Cronologia({ albero, persone, nomePersona, filtri, setFi
   // i rimborsi filtrati sono già tutti caricati: i loro totali si fanno qui
   const totaliRimborsi = useMemo(() => {
     if (!qualcosaAttivo || !rimborsi.length) return null
-    const somma = (direzione) => rimborsi.filter((r) => r.direzione === direzione).reduce((t, r) => t + inCentesimi(String(r.importo)), 0) / 100
+    const somma = (direzione) => rimborsi.filter((r) => r.direzione === direzione && (filtri.future || r.data <= oggiISO())).reduce((t, r) => t + inCentesimi(String(r.importo)), 0) / 100
     return { ricevuti: somma('ricevuto'), dati: somma('pagato') }
-  }, [rimborsi, qualcosaAttivo])
+  }, [rimborsi, qualcosaAttivo, filtri.future])
   const totaleTrovate = conteggio.transazioni + conteggio.rimborsi
   const ancora = conTransazioni(filtri) ? altreTransazioni : mostrati < rimborsi.length
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, inCentesimi } from '../../lib/numeri'
+import { euro, inCentesimi, oggiISO } from '../../lib/numeri'
 import { limitiMese, meseCorrente, nomeMese, spostaMese } from '../../lib/date'
 import Anello from '../../components/grafici/Anello'
 
@@ -18,7 +18,8 @@ export default function SezioneRisparmio() {
       .from('transazioni')
       .select('tipo, quota_personale')
       .gte('data', da)
-      .lte('data', a)
+      // le programmate (data futura) contano solo dal loro giorno
+      .lte('data', [a, oggiISO()].sort()[0])
       .then(({ data, error }) => {
         if (error) return setErrore(messaggioErrore(error))
         let entrate = 0

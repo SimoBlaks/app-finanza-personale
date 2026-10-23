@@ -65,7 +65,8 @@ export default function Riepilogo() {
         .from('transazioni')
         .select('id, data, tipo, nota, importo_totale, quota_personale, macrocategoria_id, categoria_id, microcategoria_id, condivisa, persona_id')
         .gte('data', `${anno - 1}-01-01`)
-        .lte('data', `${anno}-12-31`)
+        // le programmate (data futura) contano solo dal loro giorno
+        .lte('data', [`${anno}-12-31`, oggiISO()].sort()[0])
         .order('id'),
     ).then(({ data, error }) => (error ? setErrore(messaggioErrore(error)) : setMovimenti(data)))
   }, [anno])
@@ -148,12 +149,13 @@ export default function Riepilogo() {
 
   // investimenti dell'anno
   const perId = Object.fromEntries(base.asset.map((a) => [a.id, a]))
-  const opsAnno = base.operazioni.filter((o) => o.data.startsWith(String(anno)))
+  const fatto = (x) => x.data <= oggiISO()
+  const opsAnno = base.operazioni.filter((o) => o.data.startsWith(String(anno)) && fatto(o))
   const versato = opsAnno.filter((o) => o.tipo === 'acquisto').reduce((s, o) => s + Number(o.quantita) * Number(o.prezzo) * fattore(perId[o.asset_id]) + Number(o.spese), 0)
   const vendite = opsAnno.filter((o) => o.tipo === 'vendita')
   const incassato = vendite.reduce((s, o) => s + Number(o.liquidita_incassata), 0)
   const plusvalenze = vendite.reduce((s, o) => s + Number(o.plusvalore), 0)
-  const proventiAnno = base.proventi.filter((p) => p.data.startsWith(String(anno)))
+  const proventiAnno = base.proventi.filter((p) => p.data.startsWith(String(anno)) && fatto(p))
   const proventiNetti = proventiAnno.reduce((s, p) => s + Number(p.importo_netto), 0)
   const tasseInvestimenti = vendite.reduce((s, o) => s + Number(o.tasse), 0) + proventiAnno.reduce((s, p) => s + Number(p.tasse), 0)
   const conInvestimenti = opsAnno.length > 0 || proventiAnno.length > 0
@@ -167,7 +169,7 @@ export default function Riepilogo() {
     v.totale += cent(x.importo_totale)
     v.mia += cent(x.quota_personale)
   }
-  for (const r of base.rimborsi.filter((r) => r.data.startsWith(String(anno)))) {
+  for (const r of base.rimborsi.filter((r) => r.data.startsWith(String(anno)) && fatto(r))) {
     const v = voce(r.persona_id)
     if (r.direzione === 'ricevuto') v.ricevuti += cent(r.importo)
     else v.pagati += cent(r.importo)
