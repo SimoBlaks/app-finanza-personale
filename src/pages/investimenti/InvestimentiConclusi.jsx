@@ -6,9 +6,11 @@ import { dataBreve } from '../../lib/date'
 import { durata, statisticheConcluso, tipologie } from '../../lib/investimenti'
 import { percento } from '../../components/SchedaPosizione'
 
-// Asset comprati e poi venduti fino all'ultima quota (vedi DECISIONI.md).
+// Asset comprati e poi venduti fino all'ultima quota (vedi DECISIONI.md);
+// quelli esclusi dal patrimonio non compaiono.
 export function assetConclusi(asset, operazioni) {
   return asset.filter((a) => {
+    if (a.escluso_dal_patrimonio) return false
     const ops = operazioni.filter((o) => o.asset_id === a.id)
     if (!ops.some((o) => o.tipo === 'vendita')) return false
     const quantita = ops.reduce((t, o) => t + (o.tipo === 'acquisto' ? 1 : -1) * Number(o.quantita), 0)

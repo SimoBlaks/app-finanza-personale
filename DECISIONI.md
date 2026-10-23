@@ -145,3 +145,11 @@ Applicata al passo 6 con le viste `liquidita` e `saldi_persone`:
 - "Entrate e uscite" mostra 12 mesi alla volta e si scorre con ‹ › di un mese.
 - Nel riquadro Spese/Entrate, **"Confronta con"**: mese precedente, stesso mese dell'anno scorso, media dei 12 mesi precedenti (vista Anno: anno precedente). Sotto ogni voce e sul totale la differenza in € e %, rossa se peggiora (spese che salgono, entrate che scendono), verde se migliora.
 - Pagina **Riepilogo dell'anno** (link dalla dashboard), con ‹ › dal primo anno dei dati a oggi: entrate, uscite, risparmio e tasso di risparmio confrontati con l'anno prima (la variazione del tasso è in punti percentuali), patrimonio da fine anno precedente a fine anno (stessa regola del grafico), mese per mese, prime 10 categorie di spesa, 5 spese più grandi, investimenti (versato, incassato, plus/minusvalenze, dividendi, tasse) e spese condivise per persona. Per l'anno in corso i dati arrivano a oggi e il confronto è con l'anno precedente intero.
+
+## 2026-10-23 · Revisione del codice: correzioni
+
+- **Numeri scritti dall'utente**: virgola e punto valgono entrambi come separatore dei decimali ("12,5" = "12.5"); se compaiono tutti e due ("1.234,56") l'ultimo è il decimale. Negli importi in euro al massimo **2 decimali** (un terzo decimale dà errore invece di essere arrotondato); quantità e prezzi degli investimenti fino a 6. Sullo schermo i numeri usano sempre il punto per le migliaia e la virgola per i decimali.
+- I pulsanti Salva si bloccano al primo tocco (niente doppie registrazioni).
+- **Ricorrenze** modificabili (valgono per le transazioni future); riattivandone una ferma si riparte dalla prima scadenza da oggi, senza recuperare quelle saltate.
+- Le **registrazioni programmate** (data futura) contano nei totali solo dal loro giorno: ciambella e confronti, tasso di risparmio, riepilogo e totali dei filtri si fermano a oggi (il filtro "Future" mostra invece proprio quelle).
+- Gli **asset esclusi dal patrimonio** non contano da nessuna parte: totali di dashboard e grafici, riepilogo dell'anno, totali della cronologia investimenti (salvo filtrando proprio quell'asset), investimenti conclusi. Le loro operazioni restano nell'elenco e la liquidità resta quella reale del conto.

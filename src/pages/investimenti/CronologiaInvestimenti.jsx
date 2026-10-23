@@ -35,6 +35,7 @@ export default function CronologiaInvestimenti({ cronologia, asset, perId, filtr
   if (attivi) {
     totali = { acquisti: 0, vendite: 0, proventi: 0 }
     for (const o of filtrate) {
+      if (perId[o.asset_id]?.escluso_dal_patrimonio && filtri.asset !== o.asset_id) continue
       if (o.genere === 'provento') totali.proventi += Number(o.importo_netto)
       else totali[o.tipo === 'acquisto' ? 'acquisti' : 'vendite'] += valoreOperazione(o, perId[o.asset_id])
     }
@@ -110,6 +111,9 @@ export default function CronologiaInvestimenti({ cronologia, asset, perId, filtr
           {totali.vendite > 0 && <div><span className="nota">Vendite (netto incassato)</span><strong className="importo">{euro(totali.vendite)}</strong></div>}
           {totali.proventi > 0 && <div><span className="nota">Dividendi e cedole netti</span><strong className="importo incasso">{euro(totali.proventi)}</strong></div>}
         </div>
+      )}
+      {totali && !filtri.asset && filtrate.some((o) => perId[o.asset_id]?.escluso_dal_patrimonio) && (
+        <p className="nota">I totali non comprendono gli asset esclusi dal patrimonio.</p>
       )}
 
       {!cronologia.length && <p className="nota">Nessuna operazione registrata.</p>}

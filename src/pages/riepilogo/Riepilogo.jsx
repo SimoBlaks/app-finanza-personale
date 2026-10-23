@@ -44,7 +44,7 @@ export default function Riepilogo() {
         supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura'),
         supabase.from('transazioni').select('data, pagata_da, importo_totale, quota_personale').eq('condivisa', true),
         supabase.from('pagamenti_saldo').select('data, direzione, importo, persona_id'),
-        supabase.from('proventi_investimento').select('data, importo_netto, tasse'),
+        supabase.from('proventi_investimento').select('asset_id, data, importo_netto, tasse'),
         supabase.from('persone').select('id, nome'),
         caricaAlbero(),
       ])
@@ -150,12 +150,14 @@ export default function Riepilogo() {
   // investimenti dell'anno
   const perId = Object.fromEntries(base.asset.map((a) => [a.id, a]))
   const fatto = (x) => x.data <= oggiISO()
-  const opsAnno = base.operazioni.filter((o) => o.data.startsWith(String(anno)) && fatto(o))
+  // gli asset esclusi dal patrimonio (es. fondo pensione) non contano da nessuna parte
+  const conta = (x) => x.data.startsWith(String(anno)) && fatto(x) && !perId[x.asset_id]?.escluso_dal_patrimonio
+  const opsAnno = base.operazioni.filter(conta)
   const versato = opsAnno.filter((o) => o.tipo === 'acquisto').reduce((s, o) => s + Number(o.quantita) * Number(o.prezzo) * fattore(perId[o.asset_id]) + Number(o.spese), 0)
   const vendite = opsAnno.filter((o) => o.tipo === 'vendita')
   const incassato = vendite.reduce((s, o) => s + Number(o.liquidita_incassata), 0)
   const plusvalenze = vendite.reduce((s, o) => s + Number(o.plusvalore), 0)
-  const proventiAnno = base.proventi.filter((p) => p.data.startsWith(String(anno)) && fatto(p))
+  const proventiAnno = base.proventi.filter(conta)
   const proventiNetti = proventiAnno.reduce((s, p) => s + Number(p.importo_netto), 0)
   const tasseInvestimenti = vendite.reduce((s, o) => s + Number(o.tasse), 0) + proventiAnno.reduce((s, p) => s + Number(p.tasse), 0)
   const conInvestimenti = opsAnno.length > 0 || proventiAnno.length > 0
@@ -260,6 +262,7 @@ export default function Riepilogo() {
             <dt>Dividendi e cedole netti</dt><dd>{euro(proventiNetti)}</dd>
             <dt>Tasse pagate</dt><dd>{euro(tasseInvestimenti)}</dd>
           </dl>
+          {base.asset.some((a) => a.escluso_dal_patrimonio) && <p className="nota">Non comprende gli asset esclusi dal patrimonio.</p>}
         </div>
       )}
 
