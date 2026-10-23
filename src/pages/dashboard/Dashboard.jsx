@@ -39,6 +39,7 @@ const periodiPatrimonio = { 12: '1 anno', 60: '5 anni', tutto: 'Tutto' }
 export default function Dashboard() {
   const [d, setD] = useState(null)
   const [periodo, setPeriodo] = useState(60)
+  const [indietro, setIndietro] = useState(0) // mesi di spostamento del riquadro entrate e uscite
   const [errore, setErrore] = useState('')
 
   const carica = useCallback(async () => {
@@ -82,7 +83,8 @@ export default function Dashboard() {
       cumulato += Number(perMese.get(am)?.movimento_liquidita ?? 0)
       return { id: am, etichetta: meseEAnno(am), valore: cumulato }
     })
-    const ultimi12 = mesi.slice(-12).map((am) => {
+    // entrate e uscite di tutti i mesi: il riquadro ne mostra 12 alla volta
+    const entrateUscite = mesi.map((am) => {
       const m = perMese.get(am)
       return { id: am, etichetta: meseBreve(am), etichettaLunga: nomeMese(am), a: Number(m?.entrate ?? 0), b: Number(m?.uscite ?? 0) }
     })
@@ -95,7 +97,7 @@ export default function Dashboard() {
       dettaglio: `Liquidità ${euro(p.parti.liquidita)} · Investimenti ${euro(p.parti.investimenti)}` +
         (Math.abs(p.parti.persone) >= 0.005 ? ` · ${p.parti.persone > 0 ? 'Crediti' : 'Debiti'} ${euro(Math.abs(p.parti.persone))}` : ''),
     }))
-    return { patrimonio, ultimi12, ultimoConSpese }
+    return { patrimonio, entrateUscite, ultimoConSpese }
   }, [d])
 
   if (!d || !serie) return <section><h1>Dashboard</h1>{errore ? <p className="errore">{errore}</p> : <p className="caricamento">Caricamento…</p>}</section>
@@ -111,6 +113,10 @@ export default function Dashboard() {
   const debiti = d.saldi.reduce((t, s) => t + Math.max(-Number(s.saldo), 0), 0)
   const liquidita = d.liquidita ? Number(d.liquidita.liquidita) : null
   const patrimonio = (liquidita ?? 0) + investimenti + crediti - debiti
+
+  // 12 mesi di entrate e uscite, spostati indietro di "indietro" mesi rispetto a oggi
+  const fineFinestra = serie.entrateUscite.length - Math.min(indietro, Math.max(serie.entrateUscite.length - 12, 0))
+  const finestra = { inizio: Math.max(fineFinestra - 12, 0), mesi: serie.entrateUscite.slice(Math.max(fineFinestra - 12, 0), fineFinestra) }
 
   // variazione del patrimonio negli ultimi 12 mesi
   const ultimi13 = serie.patrimonio.slice(-13)
@@ -199,9 +205,14 @@ export default function Dashboard() {
       <div className="griglia-dashboard larga">
         <SezioneRisparmio />
         <div className="scheda">
-          <h2>Entrate e uscite · ultimi 12 mesi</h2>
+          <h2>Entrate e uscite · 12 mesi</h2>
+          <div className="selettore-mese compatto">
+            <button className="piccolo" onClick={() => setIndietro((n) => n + 1)} disabled={finestra.inizio === 0} aria-label="Mese precedente">‹</button>
+            <strong>{finestra.mesi.length ? `${meseEAnno(finestra.mesi[0].id)} – ${meseEAnno(finestra.mesi.at(-1).id)}` : ''}</strong>
+            <button className="piccolo" onClick={() => setIndietro((n) => n - 1)} disabled={indietro === 0} aria-label="Mese successivo">›</button>
+          </div>
           <ColonneDoppie
-            mesi={serie.ultimi12}
+            mesi={finestra.mesi}
             serie={[
               { chiave: 'a', etichetta: 'Entrate', colore: 'var(--entrate)' },
               { chiave: 'b', etichetta: 'Uscite', colore: 'var(--uscite)' },
