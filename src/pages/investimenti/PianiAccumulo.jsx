@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
-import { euro, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
+import { euro, leggiImporto, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
 import { dataBreve, frequenze } from '../../lib/date'
 import { etichettaPrezzo, fattore, mostraPrezzo } from '../../lib/investimenti'
 
@@ -92,12 +92,12 @@ export function ModuloPiano({ piano, righe, asset, ultimi, posizioni, onFine }) 
       const a = perId[r.asset_id]
       if (!a) return setErrore('Scegli l\'asset in ogni riga.')
       if (righeDb.some((x) => x.asset_id === r.asset_id)) return setErrore(`${a.nome} compare due volte.`)
-      const v = leggiNumero(r.valore)
+      const v = r.modalita === 'importo' ? leggiImporto(r.valore) : leggiNumero(r.valore)
       const p = leggiNumero(r.prezzo_riferimento)
-      const s = leggiNumero(r.spese || '0')
-      if (!v || Number(v) <= 0) return setErrore(`${a.nome}: ${r.modalita === 'importo' ? 'importo' : 'quantità'} non valido.`)
+      const s = leggiImporto(r.spese || '0')
+      if (!v || Number(v) <= 0) return setErrore(`${a.nome}: ${r.modalita === 'importo' ? 'importo non valido (al massimo 2 decimali)' : 'quantità non valida'}.`)
       if (!p || Number(p) <= 0) return setErrore(`${a.nome}: indica un prezzo di riferimento.`)
-      if (s === null || Number(s) < 0) return setErrore(`${a.nome}: spese non valide.`)
+      if (s === null || Number(s) < 0) return setErrore(`${a.nome}: spese non valide (al massimo 2 decimali).`)
       righeDb.push({
         asset_id: r.asset_id,
         modalita: r.modalita,

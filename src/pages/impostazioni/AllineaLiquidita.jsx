@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
-import { euro, inCentesimi, leggiNumero, oggiISO } from '../../lib/numeri'
+import { euro, inCentesimi, leggiImporto, oggiISO } from '../../lib/numeri'
 import { dataBreve } from '../../lib/date'
 
 // Rettifiche di liquidità: allineano la liquidità dell'app al saldo reale dei conti.
@@ -28,14 +28,14 @@ export default function AllineaLiquidita() {
 
   useEffect(() => { carica() }, [carica])
 
-  const reale = leggiNumero(saldo)
+  const reale = leggiImporto(saldo)
   // differenza in centesimi, per non avere errori di arrotondamento
   const differenza = reale !== null && liquidita !== null ? (inCentesimi(reale) - inCentesimi(String(liquidita))) / 100 : null
 
   async function registra(e) {
     e.preventDefault()
     setMessaggio({ testo: '', errore: false })
-    if (reale === null) return setMessaggio({ testo: 'Scrivi il saldo reale di oggi.', errore: true })
+    if (reale === null) return setMessaggio({ testo: 'Scrivi il saldo reale di oggi, con al massimo 2 decimali.', errore: true })
     if (!differenza) return setMessaggio({ testo: 'La liquidità coincide già con il saldo reale: nessuna rettifica da registrare.', errore: false })
     const ok = await conferma({
       titolo: `Registrare una rettifica di ${differenza > 0 ? '+' : '−'}${euro(Math.abs(differenza))}?`,

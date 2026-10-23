@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
-import { euro, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
+import { euro, leggiImporto, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
 
 const tipoPredefinito = (a) => (a?.tipologia === 'obbligazione' ? 'cedola' : 'dividendo')
 const tasseDa = (lordo, a) => (lordo && a ? (Math.round(Number(lordo) * Number(a.aliquota_tassa)) / 100).toFixed(2).replace('.', ',') : '')
@@ -35,8 +35,8 @@ export default function ModuloProvento({ provento, asset, posizioni, onFine }) {
     setF((x) => ({ ...x, lordo: testo, tasse: tasseAMano ? x.tasse : tasseDa(leggiNumero(testo), scelto) }))
   }
 
-  const lordo = leggiNumero(f.lordo)
-  const tasse = leggiNumero(f.tasse) ?? '0'
+  const lordo = leggiImporto(f.lordo)
+  const tasse = leggiImporto(f.tasse) ?? '0'
   const netto = lordo ? Number(lordo) - Number(tasse) : null
 
   async function salva(e) {
@@ -44,8 +44,8 @@ export default function ModuloProvento({ provento, asset, posizioni, onFine }) {
     setErrore('')
     if (!f.asset_id) return setErrore('Scegli l\'asset.')
     if (!f.data) return setErrore('Indica la data.')
-    if (!lordo || Number(lordo) <= 0) return setErrore('L\'importo lordo deve essere maggiore di zero.')
-    if (leggiNumero(f.tasse || '0') === null || Number(tasse) < 0) return setErrore('Tasse non valide.')
+    if (!lordo || Number(lordo) <= 0) return setErrore('L\'importo lordo deve essere maggiore di zero, con al massimo 2 decimali.')
+    if (leggiImporto(f.tasse || '0') === null || Number(tasse) < 0) return setErrore('Tasse non valide: usa al massimo 2 decimali.')
     if (Number(tasse) > Number(lordo)) return setErrore('Le tasse non possono superare l\'importo lordo.')
 
     const dati = { data: f.data, tipo: f.tipo, asset_id: f.asset_id, importo_lordo: lordo, tasse, nota: f.nota.trim() || null }

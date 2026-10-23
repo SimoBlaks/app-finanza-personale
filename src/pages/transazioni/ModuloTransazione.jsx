@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
-import { euro, inCentesimi, leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
+import { euro, inCentesimi, leggiImporto, leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
 import { aggiungiGiorni, aggiungiMesi, dataBreve, frequenze } from '../../lib/date'
 import { percorso } from '../../lib/categorie'
 import { nomeScorciatoia, scorciatoiaAttiva, tipiTransazione } from '../../lib/scorciatoie'
@@ -110,7 +110,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
       return y
     })
 
-  const importo = leggiNumero(f.importo)
+  const importo = leggiImporto(f.importo)
   const percentuale = leggiNumero(f.percentuale_mia)
   const anteprimaQuota =
     importo && percentuale && Number(importo) > 0 ? euro(Math.round((inCentesimi(importo) * Number(percentuale)) / 100) / 100) : null
@@ -119,7 +119,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
     e.preventDefault()
     setErrore('')
     if (!f.data) return setErrore('Indica la data.')
-    if (!importo || Number(importo) <= 0) return setErrore('Inserisci un importo maggiore di zero.')
+    if (!importo || Number(importo) <= 0) return setErrore('Inserisci un importo maggiore di zero, con al massimo 2 decimali.')
     if (!f.categoria.macroId) return setErrore('Scegli almeno la macrocategoria.')
     if (f.condivisa) {
       if (!f.persona_id) return setErrore('Scegli con chi dividere la spesa.')
@@ -132,6 +132,9 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
       if (f.fine_ricorrenza && f.fine_ricorrenza < f.prossima_scadenza)
         return setErrore('La fine della ricorrenza non può essere prima della prossima scadenza.')
     }
+
+    // da qui il pulsante resta bloccato, così un secondo tocco non salva due volte
+    setInvio(true)
 
     // Possibile doppione: una transazione nuova con stesso tipo e importo a meno di 3 giorni da una già registrata.
     if (nuova) {
@@ -162,7 +165,7 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
           ),
           conferma: 'Salva comunque',
         })
-        if (!ok) return
+        if (!ok) return setInvio(false)
       }
     }
 
@@ -180,7 +183,6 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
       percentuale_mia: f.condivisa ? percentuale : null,
     }
 
-    setInvio(true)
     const { error } = nuova
       ? f.ricorrente
         ? await supabase.rpc('crea_ricorrenza', {

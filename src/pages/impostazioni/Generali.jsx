@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { useSessione } from '../../auth/Sessione'
 import { messaggioErrore } from '../../lib/errori'
-import { leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
+import { leggiImporto, leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
 import AllineaLiquidita from './AllineaLiquidita'
 
 export default function Generali() {
@@ -29,11 +29,11 @@ export default function Generali() {
 
   async function salva(e) {
     e.preventDefault()
-    const saldo = leggiNumero(f.saldo_iniziale)
+    const saldo = leggiImporto(f.saldo_iniziale)
     const soglia = leggiNumero(f.soglia_avviso_prezzo_pct)
     const giorniA = Number(f.giorni_prezzo_vecchio_azioni)
     const giorniO = Number(f.giorni_prezzo_vecchio_obbligazioni)
-    if (saldo === null) return setMessaggio({ testo: 'Saldo iniziale non valido.', errore: true })
+    if (saldo === null) return setMessaggio({ testo: 'Saldo iniziale non valido: usa al massimo 2 decimali.', errore: true })
     if (!f.data_saldo_iniziale) return setMessaggio({ testo: 'Indica la data di partenza.', errore: true })
     if (!Number.isInteger(giorniA) || giorniA <= 0 || !Number.isInteger(giorniO) || giorniO <= 0)
       return setMessaggio({ testo: 'I giorni devono essere numeri interi maggiori di zero.', errore: true })

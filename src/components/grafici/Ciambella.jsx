@@ -31,7 +31,7 @@ export default function Ciambella({ voci, formatta, titoloCentro = 'Totale', onS
   })
   const evidenziata = fette.find((f) => f.id === attiva)
   const cliccabile = (v) => onScegli && scegliibile(v)
-  const percento = (q) => `${(q * 100).toLocaleString('it-IT', { maximumFractionDigits: 1 })}%`
+  const percento = (q) => `${(q * 100).toLocaleString('it-IT', { maximumFractionDigits: 1, useGrouping: 'always' })}%`
 
   return (
     // il contenitore misura lo spazio disponibile: legenda accanto solo se ci sta

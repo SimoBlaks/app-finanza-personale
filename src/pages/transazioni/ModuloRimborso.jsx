@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
-import { leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
+import { leggiImporto, oggiISO, perCampo } from '../../lib/numeri'
 
 // Pagamento di saldo con una persona: sposta la liquidità e il saldo con lei,
 // ma non è né una spesa né un'entrata.
@@ -16,19 +16,22 @@ export default function ModuloRimborso({ persone, rimborso, onFine }) {
     nota: rimborso?.nota ?? '',
   })
   const [errore, setErrore] = useState('')
+  const [invio, setInvio] = useState(false)
   const conferma = useConferma()
   const imposta = (campo, valore) => setF((x) => ({ ...x, [campo]: valore }))
 
   async function salva(e) {
     e.preventDefault()
-    const importo = leggiNumero(f.importo)
+    const importo = leggiImporto(f.importo)
     if (!f.persona_id) return setErrore('Scegli la persona.')
-    if (!importo || Number(importo) <= 0) return setErrore('Inserisci un importo maggiore di zero.')
+    if (!importo || Number(importo) <= 0) return setErrore('Inserisci un importo maggiore di zero, con al massimo 2 decimali.')
     if (!f.data) return setErrore('Indica la data.')
     const dati = { data: f.data, persona_id: f.persona_id, importo, direzione: f.direzione, nota: f.nota.trim() || null }
+    setInvio(true)
     const { error } = f.id
       ? await supabase.from('pagamenti_saldo').update(dati).eq('id', f.id)
       : await supabase.from('pagamenti_saldo').insert(dati)
+    setInvio(false)
     if (error) return setErrore(messaggioErrore(error))
     onFine()
   }
@@ -66,7 +69,7 @@ export default function ModuloRimborso({ persone, rimborso, onFine }) {
       <div className="azioni-modulo">
         {f.id && <button type="button" className="pericolo" onClick={elimina}>Elimina</button>}
         <button type="button" onClick={onFine}>Annulla</button>
-        <button className="primario">Salva</button>
+        <button className="primario" disabled={invio}>{invio ? 'Salvataggio…' : 'Salva'}</button>
       </div>
     </form>
   )

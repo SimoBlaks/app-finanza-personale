@@ -12,6 +12,7 @@ export default function Scorciatoie() {
   const [scorciatoie, setScorciatoie] = useState([])
   const [modulo, setModulo] = useState(null) // null | { id?, tipo, categoria, nome }
   const [errore, setErrore] = useState('')
+  const [invio, setInvio] = useState(false)
   const conferma = useConferma()
 
   const carica = useCallback(async () => {
@@ -44,11 +45,13 @@ export default function Scorciatoie() {
       nota: modulo.nota.trim() || null,
     }
     const ultimo = Math.max(0, ...scorciatoie.map((s) => s.ordine))
+    setInvio(true)
     await esegui(
       modulo.id
         ? supabase.from('scorciatoie_categoria').update(dati).eq('id', modulo.id)
         : supabase.from('scorciatoie_categoria').insert({ ...dati, ordine: ultimo + 1 }),
     )
+    setInvio(false)
     setModulo(null)
   }
 
@@ -102,7 +105,7 @@ export default function Scorciatoie() {
         {errore && <p className="errore">{errore}</p>}
         <div className="azioni-modulo">
           <button type="button" onClick={() => { setErrore(''); setModulo(null) }}>Annulla</button>
-          <button className="primario">Salva</button>
+          <button className="primario" disabled={invio}>{invio ? 'Salvataggio…' : 'Salva'}</button>
         </div>
       </form>
     )

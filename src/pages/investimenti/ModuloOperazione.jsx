@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { useConferma } from '../../components/Conferma'
-import { euro, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
+import { euro, leggiImporto, leggiNumero, numero, oggiISO, perCampo } from '../../lib/numeri'
 import { etichettaPrezzo, etichettaQuantita, fattore, mostraPrezzo, posizioneAl } from '../../lib/investimenti'
 
 // Acquisto o vendita. I valori definitivi della vendita (plusvalore, tasse,
@@ -36,7 +36,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
 
   const q = leggiNumero(f.quantita)
   const p = leggiNumero(f.prezzo)
-  const s = leggiNumero(f.spese) ?? '0'
+  const s = leggiImporto(f.spese) ?? '0'
   const lordo = q && p ? Number(q) * Number(p) * fattore(scelto) : null
 
   let anteprima = null
@@ -68,7 +68,7 @@ export default function ModuloOperazione({ tipo, operazione, asset, posizioni, o
     if (!f.data) return setErrore('Indica la data.')
     if (!q || Number(q) <= 0) return setErrore('La quantità deve essere maggiore di zero.')
     if (!p || Number(p) <= 0) return setErrore('Il prezzo deve essere maggiore di zero.')
-    if (Number(s) < 0) return setErrore('Le spese non possono essere negative.')
+    if ((f.spese.trim() && leggiImporto(f.spese) === null) || Number(s) < 0) return setErrore('Spese non valide: un importo non negativo, con al massimo 2 decimali.')
     if (vendita && Number(q) > disponibile(f.asset_id))
       return setErrore(`Puoi vendere al massimo ${numero(disponibile(f.asset_id))}.`)
 

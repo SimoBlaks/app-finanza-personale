@@ -10,7 +10,7 @@ export default function Variazione({ attuale, prima, tipo }) {
   const pct = (diff / Math.abs(prima)) * 100
   return (
     <span className={`variazione-voce ${buona ? 'meglio' : 'peggio'}`}>
-      {diff > 0 ? '▲' : '▼'} {diff > 0 ? '+' : '−'}{euro(Math.abs(diff))} ({diff > 0 ? '+' : '−'}{Math.abs(pct).toLocaleString('it-IT', { maximumFractionDigits: 0 })}%)
+      {diff > 0 ? '▲' : '▼'} {diff > 0 ? '+' : '−'}{euro(Math.abs(diff))} ({diff > 0 ? '+' : '−'}{Math.abs(pct).toLocaleString('it-IT', { maximumFractionDigits: 0, useGrouping: 'always' })}%)
     </span>
   )
 }

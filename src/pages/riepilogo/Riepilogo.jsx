@@ -13,7 +13,7 @@ import Variazione from '../../components/Variazione'
 
 const meseBreve = (am) => new Date(`${am}-15T12:00:00`).toLocaleDateString('it-IT', { month: 'short' }).replace('.', '')
 const cent = (v) => inCentesimi(String(v ?? 0))
-const percento = (x) => `${x.toLocaleString('it-IT', { maximumFractionDigits: 1 })}%`
+const percento = (x) => `${x.toLocaleString('it-IT', { maximumFractionDigits: 1, useGrouping: 'always' })}%`
 
 // Tutte le righe di una richiesta, a pagine da 1000 (il limite delle API).
 async function tutteLeRighe(richiesta) {
@@ -189,7 +189,7 @@ export default function Riepilogo() {
           <strong className="importo">{t.tasso === null ? '—' : percento(t.tasso)}</strong>
           {haAnnoPrima && tp.tasso !== null && t.tasso !== null && (
             <span className={`variazione-voce ${t.tasso >= tp.tasso ? 'meglio' : 'peggio'}`}>
-              {t.tasso >= tp.tasso ? '▲' : '▼'} {Math.abs(t.tasso - tp.tasso).toLocaleString('it-IT', { maximumFractionDigits: 1 })} punti percentuali
+              {t.tasso >= tp.tasso ? '▲' : '▼'} {Math.abs(t.tasso - tp.tasso).toLocaleString('it-IT', { maximumFractionDigits: 1, useGrouping: 'always' })} punti percentuali
             </span>
           )}
         </div>

@@ -6,7 +6,7 @@ export default function Anello({ percentuale, soglia = 20 }) {
   const nd = percentuale === null || percentuale === undefined
   const p = nd ? 0 : Math.max(Math.min(percentuale, 100), 0)
   const stato = nd ? 'neutro' : percentuale < 0 ? 'negativo' : percentuale < soglia ? 'basso' : 'buono'
-  const testo = nd ? 'n/d' : `${percentuale.toLocaleString('it-IT', { maximumFractionDigits: 1 })}%`
+  const testo = nd ? 'n/d' : `${percentuale.toLocaleString('it-IT', { maximumFractionDigits: 1, useGrouping: 'always' })}%`
 
   return (
     <svg className={`anello ${stato}`} viewBox="0 0 140 140" role="img" aria-label={`Tasso di risparmio ${testo}`}>
