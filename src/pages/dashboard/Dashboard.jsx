@@ -209,6 +209,7 @@ export default function Dashboard() {
           </div>
           <ColonneDoppie
             mesi={finestra.mesi}
+            conTotali
             serie={[
               { chiave: 'a', etichetta: 'Entrate', colore: 'var(--entrate)' },
               { chiave: 'b', etichetta: 'Uscite', colore: 'var(--uscite)' },

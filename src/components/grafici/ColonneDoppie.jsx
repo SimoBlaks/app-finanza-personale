@@ -10,7 +10,8 @@ const compatto = (n) => (n >= 1000 ? `${(n / 1000).toLocaleString('it-IT', { max
 
 // Colonne affiancate per due serie (es. entrate e uscite per mese), con legenda e
 // valori al passaggio del mouse/tocco. mesi: [{ id, etichetta, etichettaLunga, a, b }].
-export default function ColonneDoppie({ mesi, serie, formatta }) {
+// conTotali: accanto a ogni voce della legenda il totale dei mesi mostrati.
+export default function ColonneDoppie({ mesi, serie, formatta, conTotali = false }) {
   const [attivo, setAttivo] = useState(null)
   const massimo = massimoTondo(Math.max(...mesi.flatMap((m) => [m.a, m.b]), 0))
   const h = (v) => `${(v / massimo) * 100}%`
@@ -20,7 +21,10 @@ export default function ColonneDoppie({ mesi, serie, formatta }) {
     <div className="colonne-doppie">
       <div className="legenda-linea">
         {serie.map((s) => (
-          <span key={s.chiave}><span className="pallino" style={{ background: s.colore }} />{s.etichetta}</span>
+          <span key={s.chiave}>
+            <span className="pallino" style={{ background: s.colore }} />{s.etichetta}
+            {conTotali && <strong className="totale-legenda">{formatta(mesi.reduce((t, m) => t + m[s.chiave], 0))}</strong>}
+          </span>
         ))}
       </div>
       <div className="area-colonne" onMouseLeave={() => setAttivo(null)}>

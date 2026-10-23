@@ -490,7 +490,7 @@ button.link { border: none; background: none; padding: 0; min-height: 0; color: 
 .legenda-quota { color: var(--testo-tenue); font-size: 0.8rem; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Colonne affiancate */
-.legenda-linea { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--testo-tenue); margin-bottom: 0.5rem; }
+.legenda-linea { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.85rem; color: var(--testo-tenue); margin-bottom: 0.5rem; }
 .legenda-linea > span { display: inline-flex; align-items: center; }
 .area-colonne { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem; height: 200px; }
 .asse-y { display: flex; flex-direction: column; justify-content: space-between; font-size: 0.7rem; color: var(--testo-tenue); padding-bottom: 1.3rem; text-align: right; }
@@ -655,3 +655,4 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 }
 /* barre con confronto: se non c'è spazio la differenza va a capo invece di essere tagliata */
 .barra-etichetta .variazione-voce { white-space: normal; }
+.legenda-linea .totale-legenda { margin-left: 0.35rem; font-variant-numeric: tabular-nums; }
