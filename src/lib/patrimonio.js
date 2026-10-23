@@ -1,8 +1,8 @@
-import { fattore } from './investimenti'
+import { confrontaOperazioni, fattore, statoDopo } from './investimenti'
 
 // Patrimonio a fine mese (vedi DECISIONI.md): liquidità + investimenti + saldi con le persone.
 // - liquidità: quella del grafico mese per mese (saldo iniziale + movimenti cumulati);
-// - investimenti: quantità posseduta a fine mese × ultimo prezzo inserito fino a quella data,
+// - investimenti: quantità posseduta a fine mese (salvata dal database) × ultimo prezzo inserito fino a quella data,
 //   oppure il PMC se per l'asset non c'è ancora un prezzo; gli asset esclusi dal patrimonio non contano;
 // - persone: crediti meno debiti a quella data (stesse regole della vista saldi_persone).
 // Il mese in corso si chiude a oggi, così l'ultimo punto coincide con il patrimonio attuale.
@@ -10,10 +10,8 @@ import { fattore } from './investimenti'
 // liquidita: [{ id: 'AAAA-MM', etichetta, valore }] in ordine di tempo.
 export function patrimonioMensile({ liquidita, asset, operazioni, prezzi, condivise, rimborsi, oggi }) {
   const perId = Object.fromEntries(asset.map((a) => [a.id, a]))
-  // stesso ordine del database: per data, a parità di data prima gli acquisti
-  const ops = [...operazioni].sort(
-    (x, y) => x.data.localeCompare(y.data) || (x.tipo === 'vendita') - (y.tipo === 'vendita') || x.created_at.localeCompare(y.created_at),
-  )
+  // stesso ordine del database: l'ultima operazione fino a una data dà lo stato a quella data
+  const ops = [...operazioni].sort(confrontaOperazioni)
   const listini = [...prezzi].sort((x, y) => x.data.localeCompare(y.data))
   const movimentiPersone = [
     ...condivise.map((t) => ({
@@ -23,7 +21,7 @@ export function patrimonioMensile({ liquidita, asset, operazioni, prezzi, condiv
     ...rimborsi.map((r) => ({ data: r.data, importo: r.direzione === 'ricevuto' ? -Number(r.importo) : Number(r.importo) })),
   ].sort((x, y) => x.data.localeCompare(y.data))
 
-  const posizioni = {} // asset_id → { quantita, costo }
+  const posizioni = {} // asset_id → stato dopo la sua ultima operazione fino a fine mese
   const ultimoPrezzo = {} // asset_id → prezzo
   let iOp = 0
   let iPrezzo = 0
@@ -35,18 +33,10 @@ export function patrimonioMensile({ liquidita, asset, operazioni, prezzi, condiv
     const fineMese = `${m.id}-${String(new Date(Date.UTC(a, mm, 0)).getUTCDate()).padStart(2, '0')}`
     const fine = fineMese < oggi ? fineMese : oggi
 
+    // quantità e costo rimasti li ha già calcolati il database su ogni operazione
     for (; iOp < ops.length && ops[iOp].data <= fine; iOp++) {
       const o = ops[iOp]
-      const f = fattore(perId[o.asset_id])
-      const p = (posizioni[o.asset_id] ??= { quantita: 0, costo: 0 })
-      const q = Number(o.quantita)
-      if (o.tipo === 'acquisto') {
-        p.quantita += q
-        p.costo += q * Number(o.prezzo) * f + Number(o.spese)
-      } else {
-        p.costo -= p.quantita > 0 ? (p.costo / p.quantita) * q : 0
-        p.quantita -= q
-      }
+      posizioni[o.asset_id] = statoDopo(o, perId[o.asset_id])
     }
     for (; iPrezzo < listini.length && listini[iPrezzo].data <= fine; iPrezzo++) {
       ultimoPrezzo[listini[iPrezzo].asset_id] = Number(listini[iPrezzo].prezzo_chiusura)
@@ -60,7 +50,7 @@ export function patrimonioMensile({ liquidita, asset, operazioni, prezzi, condiv
       const as = perId[id]
       if (p.quantita <= 0 || as?.escluso_dal_patrimonio) continue
       const f = fattore(as)
-      const prezzo = ultimoPrezzo[id] ?? p.costo / p.quantita / f
+      const prezzo = ultimoPrezzo[id] ?? p.pmc
       investimenti += p.quantita * prezzo * f
     }
 

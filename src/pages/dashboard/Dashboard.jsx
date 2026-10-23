@@ -55,7 +55,7 @@ export default function Dashboard() {
       caricaAlbero(),
       supabase.from('riepilogo_mensile').select('mese, entrate, uscite, movimento_liquidita').order('mese'),
       // per il patrimonio nel tempo (operazioni e prezzi crescono negli anni: letti a pagine)
-      tutteLeRighe(() => supabase.from('operazioni_investimento').select('id, asset_id, data, tipo, quantita, prezzo, spese, created_at, quantita_residua, costo_residuo').order('id')),
+      tutteLeRighe(() => supabase.from('operazioni_investimento').select('id, asset_id, data, tipo, created_at, quantita_residua, costo_residuo').order('id')),
       tutteLeRighe(() => supabase.from('prezzi_storici').select('asset_id, data, prezzo_chiusura').order('data').order('asset_id')),
       supabase.from('transazioni').select('data, pagata_da, importo_totale, quota_personale').eq('condivisa', true),
       supabase.from('pagamenti_saldo').select('data, direzione, importo'),
