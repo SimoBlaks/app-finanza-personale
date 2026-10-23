@@ -653,3 +653,5 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
   .riquadro-kpi { grid-template-columns: minmax(0, 1fr); padding: 0.6rem 0.7rem; }
   .icona-kpi { grid-row: auto; width: 28px; height: 28px; border-radius: 8px; margin-bottom: 0.35rem; }
 }
+/* barre con confronto: se non c'è spazio la differenza va a capo invece di essere tagliata */
+.barra-etichetta .variazione-voce { white-space: normal; }
