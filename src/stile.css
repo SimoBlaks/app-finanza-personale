@@ -614,3 +614,7 @@ button.attivo-filtri { display: inline-flex; align-items: center; gap: 0.4rem; b
 .riga-inflazione { display: flex; align-items: flex-end; gap: 0.5rem; margin-top: 0.9rem; }
 .riga-inflazione label { flex: 1; }
 .riga-inflazione + .nota { margin: 0.3rem 0 0; font-size: 0.8rem; }
+/* Nuova transazione: avviso di possibile doppione */
+.elenco-doppioni { margin: 0.4rem 0; padding-left: 1.1rem; color: var(--testo); white-space: normal; }
+.elenco-doppioni li { margin: 0.2rem 0; }
+.dialogo-testo p { margin: 0; }

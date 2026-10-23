@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { messaggioErrore } from '../../lib/errori'
 import { euro, inCentesimi, leggiNumero, oggiISO, perCampo } from '../../lib/numeri'
-import { aggiungiMesi, frequenze } from '../../lib/date'
+import { aggiungiGiorni, aggiungiMesi, dataBreve, frequenze } from '../../lib/date'
+import { percorso } from '../../lib/categorie'
 import { nomeScorciatoia, scorciatoiaAttiva, tipiTransazione } from '../../lib/scorciatoie'
 import SceltaCategoria from '../../components/SceltaCategoria'
 import { useConferma } from '../../components/Conferma'
@@ -89,6 +90,39 @@ export default function ModuloTransazione({ albero, persone, transazione, onFine
         return setErrore('La prossima scadenza deve essere successiva alla data della transazione.')
       if (f.fine_ricorrenza && f.fine_ricorrenza < f.prossima_scadenza)
         return setErrore('La fine della ricorrenza non può essere prima della prossima scadenza.')
+    }
+
+    // Possibile doppione: una transazione nuova con stesso tipo e importo a meno di 3 giorni da una già registrata.
+    if (nuova) {
+      const { data: simili } = await supabase
+        .from('transazioni')
+        .select('id, data, nota, importo_totale, macrocategoria_id, categoria_id, microcategoria_id')
+        .eq('tipo', f.tipo)
+        .eq('importo_totale', importo)
+        .gte('data', aggiungiGiorni(f.data, -3))
+        .lte('data', aggiungiGiorni(f.data, 3))
+        .order('data')
+        .limit(5)
+      if (simili?.length) {
+        const ok = await conferma({
+          titolo: 'Possibile doppione',
+          messaggio: (
+            <>
+              <p>{simili.length === 1 ? "C'è già una registrazione" : `Ci sono già ${simili.length} registrazioni`} con lo stesso importo in quei giorni:</p>
+              <ul className="elenco-doppioni">
+                {simili.map((s) => (
+                  <li key={s.id}>
+                    {dataBreve(s.data)} · <strong>{euro(s.importo_totale)}</strong> · {s.nota || percorso(albero, s.macrocategoria_id, s.categoria_id, s.microcategoria_id)}
+                  </li>
+                ))}
+              </ul>
+              <p>Vuoi salvarla comunque?</p>
+            </>
+          ),
+          conferma: 'Salva comunque',
+        })
+        if (!ok) return
+      }
     }
 
     const dati = {

@@ -17,6 +17,13 @@ export function aggiungiMesi(iso, n) {
   return `${anno}-${pad(mese)}-${pad(Math.min(g, ultimo))}`
 }
 
+// Aggiunge (o toglie, se negativo) n giorni a una data ISO.
+export function aggiungiGiorni(iso, n) {
+  const d = new Date(`${iso}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
 // Primo e ultimo giorno di un mese ("2026-10") in ISO.
 export function limitiMese(annoMese) {
   const [a, m] = annoMese.split('-').map(Number)
